@@ -1,0 +1,11 @@
+apiVersion: v2
+name: glauth
+description: GLAuth LDAP authentication server Helm Chart
+type: application
+appVersion: 2.3.2
+version: 1.0.1
+sources:
+  - https://github.com/milaboratory/public-helm-charts/charts/glauth
+maintainers:
+  - name: Vladimir Antropov
+    email: vladimir.antropov@milaboratories.com

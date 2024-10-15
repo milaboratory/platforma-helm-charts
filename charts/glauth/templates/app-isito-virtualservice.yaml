@@ -1,0 +1,28 @@
+{{- if .Values.app.istio.enabled }}
+{{- $istioHosts := .Values.app.istio.hosts }}
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: {{ template "glauth.fullname" . }}-virtual-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "glauth.labels" . | nindent 4 }}
+    {{- with .Values.app.istio.virtualService.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  hosts:
+  {{- range $istioHosts }}
+    - {{ tpl . $ | quote }}
+  {{- end }}
+  gateways:
+    - {{ template "glauth.fullname" . }}-gateway
+  tcp:
+    - match:
+        - port: {{ .Values.app.istio.gateway.port }}
+      route:
+        - destination:
+            host: {{ template "glauth.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+            port:
+              number: {{ .Values.app.istio.gateway.port }}
+{{- end }}

@@ -1,0 +1,200 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.app.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  name: {{ template "platforma.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "platforma.selectorLabels" . | nindent 6 }}
+  {{- if not .Values.app.horizontalPodAutoscaler.enabled }}
+  replicas: {{ .Values.app.replicaCount }}
+  {{- end }}
+  {{- with .Values.app.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      checksum/config: {{ include (print .Template.BasePath "/app-htpasswd.yaml") . | sha256sum }}
+      {{- with .Values.app.podAnnotations }}
+      annotations:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+      {{- include "platforma.labels" . | nindent 8 }}
+      {{- with .Values.app.podLabels }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if .Values.app.priorityClassName }}
+      priorityClassName: {{ .Values.app.priorityClassName | toString }}
+      {{- end }}
+      {{- if .Values.app.schedulerName }}
+      schedulerName: {{ .Values.app.schedulerName }}
+      {{- end }}
+      {{- if .Values.app.enableServiceLinks }}
+      enableServiceLinks: {{ .Values.app.enableServiceLinks }}
+      {{- end }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      {{- with .Values.app.initContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.app.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ template "platforma.name" . }}-{{ .Values.app.name }}
+          image: "{{ .Values.app.image.repository }}:{{ include "platforma.imageTag" . }}"
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+          {{- if .Values.app.containerWorkingDir }}
+          workingDir: {{ .Values.app.containerWorkingDir }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.app.securityContext | nindent 12 }}
+          {{- if .Values.app.image.command }}
+          command: [{{ .Values.app.image.command | quote }}]
+          {{- end }}
+          {{- if .Values.app.image.args }}
+          args:
+          {{- range .Values.app.image.args }}
+            - {{ . | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.app.env }}
+          env:
+          {{- range $key, $value := .Values.app.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.app.envValueFrom }}
+          {{- range $key, $value := .Values.app.envValueFrom }}
+            - name: {{ $key | quote }}
+              valueFrom:
+                {{- tpl (toYaml $value) $ | nindent 16 }}
+          {{- end }}
+          {{- end }}
+          ports:
+            - name: {{ .Values.app.service.portName }}
+              containerPort: {{ .Values.app.service.targetPort }}
+            - name: {{ .Values.app.debug.service.portName }}
+              containerPort: {{ .Values.app.debug.service.targetPort }}
+          {{- if .Values.app.metrics.enabled }}
+            - name: {{ .Values.app.metrics.portName }}
+              containerPort: {{ .Values.app.metrics.targetPort }}
+          {{- end }}
+          {{- with .Values.app.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.app.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12  }}
+          {{- end }}
+          {{- with .Values.app.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12  }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/platforma/platforma.yaml
+              subPath: platforma.yaml
+              readOnly: true
+          {{- if eq .Values.app.coreConfig.auth.type "htpasswd" }}     
+            - name: htpasswd
+              mountPath: /etc/platforma/users.htpasswd
+              subPath: users.htpasswd
+              readOnly: true
+          {{- end }}    
+            - name: database-volume
+              mountPath: {{ .Values.app.persistentVolume.database.mountPath }}
+            - name: work-volume
+              mountPath: {{ .Values.app.persistentVolume.work.mountPath }}
+            - name: software-loader
+              mountPath: {{ .Values.app.persistentVolume.softwareloader.mountPath }}
+          {{- with .Values.app.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.app.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.app.podSecurityContext }}
+      securityContext:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.app.hostAliases }}
+      hostAliases:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      serviceAccountName: {{ template "platforma.serviceAccountName" . }}
+      {{- with .Values.app.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.app.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.app.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.app.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      {{- with .Values.app.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml . | indent 8 }}
+      {{- end }}
+      hostNetwork: {{ .Values.app.hostNetwork }}
+      {{- if .Values.app.dnsPolicy }}
+      dnsPolicy: {{ .Values.app.dnsPolicy | toString }}
+      {{- end }}
+      {{- with .Values.dnsConfig }}
+      dnsConfig:
+{{- toYaml . | indent 8 }}
+    {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ template "platforma.fullname" . }}-config
+        {{- if eq .Values.app.coreConfig.auth.type "htpasswd" }}    
+        - name: htpasswd
+          secret:
+            secretName: {{ template "platforma.fullname" . }}-htpasswd-config
+        {{- end }}    
+        - name: work-volume
+        {{- if .Values.app.persistentVolume.work.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.app.persistentVolume.work.existingClaim }}{{ .Values.app.persistentVolume.work.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-work{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: database-volume
+        {{- if .Values.app.persistentVolume.database.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.app.persistentVolume.database.existingClaim }}{{ .Values.app.persistentVolume.database.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-database{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
+        - name: software-loader
+        {{- if .Values.app.persistentVolume.softwareloader.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.app.persistentVolume.softwareloader.existingClaim }}{{ .Values.app.persistentVolume.softwareloader.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-softwareloader{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end -}}
+    {{- with .Values.app.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

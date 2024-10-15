@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "platforma.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+data:
+  platforma.yaml: |
+    {{ include "platforma.calculatedConfig" . | nindent 4 }}
