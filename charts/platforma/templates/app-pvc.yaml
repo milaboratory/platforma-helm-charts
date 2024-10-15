@@ -1,0 +1,107 @@
+{{- if and .Values.app.persistentVolume.database.enabled (not .Values.app.persistentVolume.database.existingClaim) .Values.app.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "platforma.fullname" . }}-database
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.persistentVolume.database.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{ end }}
+  {{- with .Values.app.persistentVolume.database.annotations }}
+  annotations:
+    {{- toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.app.persistentVolume.database.accessModes }}
+  accessModes:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.app.persistentVolume.database.size | quote }}
+  {{- if .Values.app.persistentVolume.database.reclaimPolicy }}
+  persistentVolume.databaseReclaimPolicy: {{ .Values.app.persistentVolume.database.reclaimPolicy }}
+  {{- end }}
+  {{- if .Values.app.persistentVolume.database.storageClass }}
+  storageClassName: {{ .Values.app.persistentVolume.database.storageClass | quote }}
+  {{- end }}
+  {{- with .Values.app.persistentVolume.database.matchLabels }}
+  selector:
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}
+---
+{{- if and .Values.app.persistentVolume.work.enabled (not .Values.app.persistentVolume.work.existingClaim) .Values.app.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "platforma.fullname" . }}-work
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.persistentVolume.work.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{ end }}
+  {{- with .Values.app.persistentVolume.work.annotations }}
+  annotations:
+    {{- toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.app.persistentVolume.work.accessModes }}
+  accessModes:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.app.persistentVolume.work.size | quote }}
+  {{- if .Values.app.persistentVolume.work.reclaimPolicy }}
+  persistentVolume.workReclaimPolicy: {{ .Values.app.persistentVolume.work.reclaimPolicy }}
+  {{- end }}
+  {{- if .Values.app.persistentVolume.work.storageClass }}
+  storageClassName: {{ .Values.app.persistentVolume.work.storageClass | quote }}
+  {{- end }}
+  {{- with .Values.app.persistentVolume.work.matchLabels }}
+  selector:
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}
+---
+{{- if and .Values.app.persistentVolume.softwareloader.enabled (not .Values.app.persistentVolume.softwareloader.existingClaim) .Values.app.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "platforma.fullname" . }}-softwareloader
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.persistentVolume.softwareloader.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{ end }}
+  {{- with .Values.app.persistentVolume.softwareloader.annotations }}
+  annotations:
+    {{- toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.app.persistentVolume.softwareloader.accessModes }}
+  accessModes:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.app.persistentVolume.softwareloader.size | quote }}
+  {{- if .Values.app.persistentVolume.softwareloader.reclaimPolicy }}
+  persistentVolume.softwareloaderReclaimPolicy: {{ .Values.app.persistentVolume.softwareloader.reclaimPolicy }}
+  {{- end }}
+  {{- if .Values.app.persistentVolume.softwareloader.storageClass }}
+  storageClassName: {{ .Values.app.persistentVolume.softwareloader.storageClass | quote }}
+  {{- end }}
+  {{- with .Values.app.persistentVolume.softwareloader.matchLabels }}
+  selector:
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}

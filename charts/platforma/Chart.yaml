@@ -1,0 +1,11 @@
+apiVersion: v2
+name: platforma
+description: MiLaboratories Platforma Helm Chart
+type: application
+appVersion: 1.14.8
+version: 1.0.1
+sources:
+  - https://github.com/milaboratory/public-helm-charts/charts/platforma
+maintainers:
+  - name: Vladimir Antropov
+    email: vladimir.antropov@milaboratories.com

@@ -1,0 +1,35 @@
+{{- if and .Values.app.persistentVolume.enabled (not .Values.app.persistentVolume.existingClaim) .Values.app.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "glauth.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "glauth.labels" . | nindent 4 }}
+    {{- with .Values.app.persistentVolume.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{ end }}
+  {{- with .Values.app.persistentVolume.annotations }}
+  annotations:
+    {{- toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.app.persistentVolume.accessModes }}
+  accessModes:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.app.persistentVolume.size | quote }}
+  {{- if .Values.app.persistentVolume.reclaimPolicy }}
+  persistentVolumeReclaimPolicy: {{ .Values.app.persistentVolume.reclaimPolicy }}
+  {{- end }}
+  {{- if .Values.app.persistentVolume.storageClass }}
+  storageClassName: {{ .Values.app.persistentVolume.storageClass | quote }}
+  {{- end }}
+  {{- with .Values.app.persistentVolume.matchLabels }}
+  selector:
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}

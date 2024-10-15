@@ -1,0 +1,77 @@
+{{- if .Values.app.ingress.enabled }}
+{{- $ingressApiIsStable := eq (include "platforma.ingress.isStable" .) "true" -}}
+{{- $ingressSupportsIngressClassName := eq (include "platforma.ingress.supportsIngressClassName" .) "true" -}}
+{{- $ingressSupportsPathType := eq (include "platforma.ingress.supportsPathType" .) "true" -}}
+{{- $servicePort := .Values.app.service.port -}}
+{{- $ingressPath := .Values.app.ingress.path -}}
+{{- $ingressPathType := .Values.app.ingress.pathType -}}
+{{- $extraPaths := .Values.app.ingress.extraPaths -}}
+{{- $istioIngressGateway := .Values.app.istio.ingressGateway.backends }}
+{{- $serviceName := include "platforma.fullname" . -}}
+apiVersion: {{ include "platforma.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ template "platforma.fullname" . }}
+  {{- if .Values.app.istio.enabled }}
+  namespace: istio-system
+  {{- else }}
+  namespace: {{ .Release.Namespace }}
+  {{- end }}
+  {{- with .Values.app.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if and $ingressSupportsIngressClassName .Values.app.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.app.ingress.ingressClassName }}
+  {{- end -}}
+  {{- with .Values.app.ingress.tls }}
+  tls:
+    {{- tpl (toYaml .) $ | nindent 4 }}
+  {{- end }}
+  rules:
+  {{- if .Values.app.istio.enabled }}
+  {{- range .Values.app.istio.hosts }}
+    - host: {{ tpl . $ }}
+      http:
+        paths:
+        {{- range $k, $v := $istioIngressGateway }}
+        - backend:
+            service:
+              name: {{ $v.name }}
+              port:
+                number: {{ $v.portNumber }}
+          path: {{ $v.path }}
+          pathType: {{ $v.pathType }}
+        {{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range .Values.app.ingress.hosts }}
+    - host: {{ tpl . $ }}
+      http:
+        paths:
+          {{- with $extraPaths }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+          - path: {{ $ingressPath }}
+            {{- if $ingressSupportsPathType }}
+            pathType: {{ $ingressPathType }}
+            {{- end }}
+            backend:
+              {{- if $ingressApiIsStable }}
+              service:
+                name: {{ $serviceName }}
+                port:
+                  number: {{ $servicePort }}
+              {{- else }}
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $servicePort }}
+              {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
