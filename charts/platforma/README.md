@@ -5,7 +5,7 @@ For me information please visit the official documentation page [Platforma Backe
 
 ## Prerequisites
 
-- Kubernetes 1.20+
+- Kubernetes 1.25+
 - Helm 3.0+
 
 ## Installing

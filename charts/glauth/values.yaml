@@ -133,7 +133,6 @@ app:
         [[users.capabilities]]
         action = "search"
         object = "ou=users,dc=demo,dc=io"
-
   # -- Persistent volume
   persistentVolume:
     # -- Create/use Persistent Volume Claim for server component. Empty dir if false
