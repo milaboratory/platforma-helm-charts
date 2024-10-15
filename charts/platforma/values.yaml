@@ -74,10 +74,10 @@ app:
     fsGroup: 3000
   # -- Prometheus metrics settings
   metrics:
-  # If you enable Prometheus metrics for an application,
-  # add proper annotations; see podAnnotations for an example.
-  # You need to add them manually as a compatible layer with istio metrics.
-  # Add another reason that we have auto scraping enabled based on Prometheus annotations.
+    # If you enable Prometheus metrics for an application,
+    # add proper annotations; see podAnnotations for an example.
+    # You need to add them manually as a compatible layer with istio metrics.
+    # Add another reason that we have auto scraping enabled based on Prometheus annotations.
     enabled: false
     targetPort: 9090
     portName: metrics-server
@@ -276,7 +276,6 @@ app:
               url: "https://bin.registry.platforma.bio/"
 
       workflows: {}
-
   coreConfig:
     auth:
       enabled: true
@@ -405,7 +404,6 @@ app:
           portNumber: 80
           path: /
           pathType: Prefix
-
   ingress:
     # -- Enable deployment of ingress for server component
     enabled: false

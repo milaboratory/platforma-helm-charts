@@ -5,7 +5,18 @@ type: application
 appVersion: 2.3.2
 version: 1.0.1
 sources:
-  - https://github.com/milaboratory/public-helm-charts/charts/glauth
-maintainers:
-  - name: Vladimir Antropov
-    email: vladimir.antropov@milaboratories.com
+  - https://github.com/milaboratory/platforma-helm-charts/charts/glauth
+kubeVersion: ">=1.25.0-0"
+home: https://github.com/milaboratory/platforma-helm-charts
+keywords:
+  - glauth
+  - kubernetes
+  - ldap
+annotations:
+  artifacthub.io/links: |
+    - name: Sources
+      url: https://github.com/glauth/glauth
+    - name: Charts repo
+      url: https://github.com/milaboratory/platforma-helm-charts
+    - name: Docs
+      url: https://glauth.github.io/docs/
