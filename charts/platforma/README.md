@@ -25,7 +25,7 @@ kubectl create secret generic mi-license-secret --from-literal=mi-license-key='y
 Reference the Secrets in the Application:
 Modify your application's deployment configuration to use these secrets. This is usually done in the envValueFrom section of the values.yaml file or directly in your application's configuration.
 
-```toml
+```yaml
 app:
   envValueFrom:
     PL_LICENSE:
@@ -39,7 +39,7 @@ app:
 ```
 You can also use the [External Secrets Operator](https://external-secrets.io), which is compatible with various secret management systems. For AWS environments, refer to the relevant configuration block in `values.yaml`:
 
-```toml
+```yaml
 externalSecret:
   enabled: false
   awsRegion: eu-central-1
@@ -62,7 +62,7 @@ IAM Role:
 Role-Based Access: Attach an IAM role to your service account or Kubernetes node. This role should have policies granting the necessary permissions to interact with the specified S3 bucket. This method is preferred in AWS as it does not require hard-coding credentials and offers more dynamic access control.
 Example of assigning an IAM role to a service account:
 
-```toml
+```yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -82,7 +82,7 @@ kubectl create secret generic s3-credentials --from-literal=access-key-id='AKLLA
 
 Referencing the secret in your deployment:
 
-```toml
+```yaml
 env:
   - name: AWS_ACCESS_KEY_ID
     valueFrom:
@@ -106,7 +106,7 @@ If you choose to use htpasswd for authentication, you need to specify a list of 
 Configure htpasswd in values.yaml:
 Add user credentials in the htpasswdConfig parameter. Each user's password must be hashed, typically using bcrypt, MD5, or SHA.
 
-```tomal
+```yaml
 htpasswdConfig: |
     testuser:$apr1$0eub5f9s$QfkUyJqNcTj3TcbO3dcEI1
 ```
@@ -119,7 +119,7 @@ LDAP is a popular choice for centralized authentication, allowing users to log i
 Configure LDAP in `values.yaml`:
 Set the LDAP configuration parameters such as the server URL, bind DN, password, search base e.t.c
 
-```tomal
+```yaml
 config: |
   core:
     auth:
