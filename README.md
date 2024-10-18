@@ -10,7 +10,6 @@ Current applications
 --------------------
 
 - [Platforma](charts/platforma)
-- [GLAuth](charts/glauth)
 
 ## Add a chart helm repository
 
