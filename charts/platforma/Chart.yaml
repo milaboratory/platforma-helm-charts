@@ -3,7 +3,7 @@ name: platforma
 description: MiLaboratories Platforma Helm Chart
 type: application
 appVersion: 1.14.10
-version: 1.0.3
+version: 1.0.4
 sources:
   - https://github.com/milaboratory/platforma-helm-charts/charts/platforma
 kubeVersion: ">=1.25.0-0"
