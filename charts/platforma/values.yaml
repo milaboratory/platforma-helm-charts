@@ -383,27 +383,6 @@ app:
   #  successThreshold: 1
   #  timeoutSeconds: 5
   #
-  # Istio
-  istio:
-    enabled: false
-    gateway:
-      ingressGatewayName: ingressgateway
-      port: 80
-      portName: http-istio
-      protocol: HTTP
-      extraLabels: {}
-    virtualService:
-      pathPrefix: /
-      extraLabels: {}
-    hosts:
-      - chart.local
-    ingressGateway:
-      backends:
-        controller:
-          name: istio-ingressgateway
-          portNumber: 80
-          path: /
-          pathType: Prefix
   ingress:
     # -- Enable deployment of ingress for server component
     enabled: false
