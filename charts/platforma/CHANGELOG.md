@@ -1,3 +1,12 @@
+## 1.0.8
+
+**Release date:** 2024-11-13
+
+![AppVersion: v1.14.15](https://img.shields.io/static/v1?label=AppVersion&message=v1.14.15&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+- Update Platforma  from v1.14.14 to v1.14.15.
+
 ## 1.0.7
 
 **Release date:** 2024-11-07
