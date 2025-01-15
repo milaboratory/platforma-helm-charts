@@ -1,3 +1,8 @@
+## 1.3.2
+
+![AppVersion: v1.18.2](https://img.shields.io/static/v1?label=AppVersion&message=v1.18.2&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
 ## 1.2.0
 
 **Release date:** 2024-12-03
