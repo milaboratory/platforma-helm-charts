@@ -2,8 +2,8 @@ apiVersion: v2
 name: platforma
 description: MiLaboratories Platforma Helm Chart
 type: application
-appVersion: 1.25.0
-version: 1.10.0
+appVersion: 1.26.2
+version: 1.11.0
 sources:
   - https://github.com/milaboratory/platforma-helm-charts/charts/platforma
 kubeVersion: ">=1.25.0-0"
