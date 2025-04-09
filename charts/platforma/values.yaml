@@ -275,7 +275,9 @@ app:
             - type: "url"
               url: "https://bin.registry.platforma.bio/"
 
-      workflows: {}
+      workflows:
+        features:
+          computeLimits: true
   coreConfig:
     auth:
       enabled: true
