@@ -10,8 +10,34 @@ entries:
         - name: Docs
           url: https://docs.platforma.bio/
     apiVersion: v2
+    appVersion: 1.32.1
+    created: "2025-04-29T07:39:55.252715+02:00"
+    description: MiLaboratories Platforma Helm Chart
+    digest: 7c22907de0e7eb436610a33de86a25eb2a944d9e8db0a0fecf0f2e48017e8591
+    home: https://github.com/milaboratory/platforma-helm-charts
+    keywords:
+    - milaboratories
+    - platforma
+    - kubernetes
+    kubeVersion: '>=1.25.0-0'
+    name: platforma
+    sources:
+    - https://github.com/milaboratory/platforma-helm-charts/charts/platforma
+    type: application
+    urls:
+    - https://milaboratory.github.io/platforma-helm-charts/packages/platforma-1.17.1.tgz
+    version: 1.17.1
+  - annotations:
+      artifacthub.io/links: |
+        - name: Sources
+          url: https://platforma.bio/downloads/
+        - name: Charts repo
+          url: https://github.com/milaboratory/platforma-helm-charts
+        - name: Docs
+          url: https://docs.platforma.bio/
+    apiVersion: v2
     appVersion: 1.31.4
-    created: "2025-04-22T11:03:32.114376+02:00"
+    created: "2025-04-29T07:39:55.252008+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 01dafd1693efdc50f8aa93038a1cdabbd7d2afce76bc01fc0f2f2140af0190f8
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -37,7 +63,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.31.1
-    created: "2025-04-22T11:03:32.113522+02:00"
+    created: "2025-04-29T07:39:55.250996+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 309b70fd730846462a87df84b8ea0da7b517963bbcab6bf32156cc2e36dfd17c
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -63,7 +89,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.29.3
-    created: "2025-04-22T11:03:32.112675+02:00"
+    created: "2025-04-29T07:39:55.249953+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 669cce0dad094c55c8df94e69190f9e3a557332421fb45b3c90306f387d37fe8
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -89,7 +115,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.29.2
-    created: "2025-04-22T11:03:32.111825+02:00"
+    created: "2025-04-29T07:39:55.248864+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: d01e55619b96a3cee5c4cd4e5a41decd85b656e3f40e5c3f21fd53ebae905292
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -115,7 +141,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.28.0
-    created: "2025-04-22T11:03:32.110932+02:00"
+    created: "2025-04-29T07:39:55.247845+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: a8b96695176af1298fe09db0ea63997435ac8311447a7543d9b531030a099176
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -141,7 +167,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.27.0
-    created: "2025-04-22T11:03:32.110063+02:00"
+    created: "2025-04-29T07:39:55.246649+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 5432a2dc675f216a5cde001e0905c31cbcef25fa9b42cedee3bd1ae089744e9a
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -167,7 +193,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.26.2
-    created: "2025-04-22T11:03:32.109151+02:00"
+    created: "2025-04-29T07:39:55.245493+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 85c75543c950a45d9b3d0d0b1e76d2b500d56f284853bcd73d0bc74724cfdcb5
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -193,7 +219,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.25.0
-    created: "2025-04-22T11:03:32.107822+02:00"
+    created: "2025-04-29T07:39:55.244409+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 2f82b008f8bf39020edd88823563f39d179bfa5affedca5975f56502d7fa5dd8
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -219,7 +245,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.24.0
-    created: "2025-04-22T11:03:32.118251+02:00"
+    created: "2025-04-29T07:39:55.257066+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: e16a5773ca3b457ea99dbc6cb25ca24c5d1aa79bff652253f64f5d72ba41e86d
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -245,7 +271,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.18.3
-    created: "2025-04-22T11:03:32.117406+02:00"
+    created: "2025-04-29T07:39:55.256083+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: a81d3d013b0f27a02d5885f165ec68d08063c5e0ab56f2974501a2feb5281807
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -271,7 +297,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.18.2
-    created: "2025-04-22T11:03:32.116573+02:00"
+    created: "2025-04-29T07:39:55.255209+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 6815ffe917b9977c2e83d69d1463dee5870ce376a2d7acd14c8e9e1dd661ff9d
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -297,7 +323,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.17.0
-    created: "2025-04-22T11:03:32.115716+02:00"
+    created: "2025-04-29T07:39:55.254131+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 9458532df1b62dd9c9e3a240c807c94b71d837ffe614af08d8a310b1d1edeb36
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -323,7 +349,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.16.2
-    created: "2025-04-22T11:03:32.106928+02:00"
+    created: "2025-04-29T07:39:55.243298+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 3b93775834531e270e665f94e3fc42f8ae10536c9b55ded49ec3766edfab65b6
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -349,7 +375,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.15.8
-    created: "2025-04-22T11:03:32.097406+02:00"
+    created: "2025-04-29T07:39:55.232766+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 0462c1ac20542077cc961894117a80818abb7c6d6a9f0b03c46547d99761d181
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -375,7 +401,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.15.6
-    created: "2025-04-22T11:03:32.106002+02:00"
+    created: "2025-04-29T07:39:55.242203+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 153f55f2d60d86982664ad6b1d6e1d962cf4d72e230af891edbfdc21ae47c045
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -401,7 +427,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.15
-    created: "2025-04-22T11:03:32.105114+02:00"
+    created: "2025-04-29T07:39:55.24115+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 03f83f87bbe4b3f52b949ab39c69d650010fa6f7e8c91b2b5ae87bc5affd18d0
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -427,7 +453,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.14
-    created: "2025-04-22T11:03:32.104232+02:00"
+    created: "2025-04-29T07:39:55.240078+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: fffafc2958ac75af2f6c06932765995ae6fcca846c9dbddfb4216f6b45883e47
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -453,7 +479,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.13
-    created: "2025-04-22T11:03:32.103307+02:00"
+    created: "2025-04-29T07:39:55.239156+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 9e451615d46af23de784cad653deb90bf6158dff78b79317c014909c81869321
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -479,7 +505,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.12
-    created: "2025-04-22T11:03:32.102197+02:00"
+    created: "2025-04-29T07:39:55.236766+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 4f726091fb02606015aed8d22f63ebaf54b1f9c8d71931301ff798a61a5309bd
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -505,7 +531,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.10
-    created: "2025-04-22T11:03:32.1002+02:00"
+    created: "2025-04-29T07:39:55.23573+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 8200d4f4ea6487300ad917f9bb2ae825def42494fe7c551d9f0711ca89eb3604
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -531,7 +557,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.10
-    created: "2025-04-22T11:03:32.099323+02:00"
+    created: "2025-04-29T07:39:55.234813+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 0c385a90b3c1dfca0f26f47477e00c2d65b422af8e03d0925a5484f04bc0403f
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -557,7 +583,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.9
-    created: "2025-04-22T11:03:32.098399+02:00"
+    created: "2025-04-29T07:39:55.233749+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: 567fe5290dafb782c47e620bc4e558c66bc66e2eef080f5abef3cc79b3c7bddd
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -583,7 +609,7 @@ entries:
           url: https://docs.platforma.bio/
     apiVersion: v2
     appVersion: 1.14.8
-    created: "2025-04-22T11:03:32.096425+02:00"
+    created: "2025-04-29T07:39:55.231529+02:00"
     description: MiLaboratories Platforma Helm Chart
     digest: c572f5c260e5d445007ae7b6b2271b475db8e5f28f353fdcc8748aac34e6bd63
     home: https://github.com/milaboratory/platforma-helm-charts
@@ -599,4 +625,4 @@ entries:
     urls:
     - https://milaboratory.github.io/platforma-helm-charts/packages/platforma-1.0.1.tgz
     version: 1.0.1
-generated: "2025-04-22T11:03:32.095157+02:00"
+generated: "2025-04-29T07:39:55.230071+02:00"
