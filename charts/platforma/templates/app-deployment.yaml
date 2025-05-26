@@ -119,8 +119,10 @@ spec:
               mountPath: {{ .Values.app.persistentVolume.database.mountPath }}
             - name: work-volume
               mountPath: {{ .Values.app.persistentVolume.work.mountPath }}
+          {{- if and .Values.app.persistentVolume.softwareloader.enabled (not .Values.app.persistentVolume.softwareloader.useWorkVolume) }}
             - name: software-loader
               mountPath: {{ .Values.app.persistentVolume.softwareloader.mountPath }}
+          {{- end }}
           {{- with .Values.app.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -188,13 +190,11 @@ spec:
         {{- else }}
           emptyDir: {}
         {{- end }}
+        {{- if and .Values.app.persistentVolume.softwareloader.enabled (not .Values.app.persistentVolume.softwareloader.useWorkVolume) }}
         - name: software-loader
-        {{- if .Values.app.persistentVolume.softwareloader.enabled }}
           persistentVolumeClaim:
             claimName: {{ if .Values.app.persistentVolume.softwareloader.existingClaim }}{{ .Values.app.persistentVolume.softwareloader.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-softwareloader{{- end }}
-        {{- else }}
-          emptyDir: {}
-        {{- end -}}
+        {{- end }}
     {{- with .Values.app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
     {{- end }}

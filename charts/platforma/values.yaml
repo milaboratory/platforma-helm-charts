@@ -152,7 +152,6 @@ app:
   config: |
     logging:
       level: "info"
-
     debug:
       listen: "0.0.0.0:9091"
     grpcServer:
@@ -161,13 +160,9 @@ app:
       listen: "0.0.0.0:9090"
     license:
       value: "env:PL_LICENSE"
-
     core:
       logging:
         extendedInfo: true
-        apiLevel: "info"
-        dbLevel: "info"
-
       authEnabled: true
       auth:
       {{- if eq .Values.app.coreConfig.auth.type "htpasswd" }}
@@ -191,7 +186,7 @@ app:
           init: 1m
           stop: 30s
 
-      file:
+      data:
         main:
           storages:
             primary:
@@ -208,58 +203,30 @@ app:
 
             test-assets:
               mode: passive
-
-          workdirManager: work
-          uploadManager: primary
-          defaultDownloadable: primary
-
-          transfers:
-            - ["primary", "work"]
-            - ["work", "primary"]
-
-            - ["raw", "work"]
-            - ["test-assets", "work"]
-
+          
         storages:
-          - &primaryStorage
-            id: "primary"
+          - id: "primary"
             type: S3
             region: "eu-central-1"
             bucketName: "example-s3-bucket-name"
             keyPrefix: "platforma-primary/"
 
-          - &rawStorage
-            id: "raw"
+          - id: "raw"
             type: S3
             region: "eu-central-1"
             bucketName: "example-s3-bucket-name"
             keyPrefix: "corp-library/"
 
-          - &testAssetsStorage
-            id: "test-assets"
+          - id: "test-assets"
             type: S3
             region: "eu-central-1"
             bucketName: "example-s3-bucket-name"
             keyPrefix: "test-assets/"
 
-          - &workStorage
-            id: "work"
+          - id: "work"
             type: FS
             indexCachePeriod: "1m"
             rootPath: {{ .Values.app.persistentVolume.work.mountPath | quote }}
-
-        transfers:
-          - src: *primaryStorage
-            dst: *workStorage
-
-          - src: *workStorage
-            dst: *primaryStorage
-
-          - src: *rawStorage
-            dst: *workStorage
-
-          - src: *testAssetsStorage
-            dst: *workStorage
 
       runner:
         type: local
@@ -267,13 +234,6 @@ app:
 
       packageLoader:
         packagesRoot: {{ .Values.app.persistentVolume.softwareloader.mountPath | quote }}
-        registries:
-        - name: "milaboratories"
-          endpoints:
-            - type: "local"
-              path: {{ .Values.app.persistentVolume.softwareloader.mountPath | quote }}
-            - type: "url"
-              url: "https://bin.registry.platforma.bio/"
 
       workflows:
         features:
@@ -338,8 +298,10 @@ app:
       type: "pvc"
       # -- Mount path
       mountPath: "/storage/controllers/software-loader"
+      # -- When true, no volume will be created for software-loader and it will use the work volume path
+      # When false, it will create its own PVC and mount it
+      useWorkVolume: false
       # -- Array of access modes. Must match those of existing PV or dynamic provisioner.
-      # ref: [http://kubernetes.io/docs/user-guide/persistent-volumes/](http://kubernetes.io/docs/user-guide/persistent-volumes/)
       accessModes:
         - ReadWriteOnce
       # -- Persistant volume annotations
