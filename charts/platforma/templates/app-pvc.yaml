@@ -105,3 +105,39 @@ spec:
       {{- toYaml . | nindent 6 }}
   {{- end }}
 {{- end }}
+---
+{{- if and .Values.app.persistentVolume.nfsShareVolume.enabled (not .Values.app.persistentVolume.nfsShareVolume.existingClaim) .Values.app.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "platforma.fullname" . }}-nfs-share
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.app.persistentVolume.nfsShareVolume.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{ end }}
+  {{- with .Values.app.persistentVolume.nfsShareVolume.annotations }}
+  annotations:
+    {{- toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.app.persistentVolume.nfsShareVolume.accessModes }}
+  accessModes:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+  resources:
+    requests:
+      storage: 1Gi
+  {{- if .Values.app.persistentVolume.nfsShareVolume.reclaimPolicy }}
+  persistentVolumeReclaimPolicy: {{ .Values.app.persistentVolume.nfsShareVolume.reclaimPolicy }}
+  {{- end }}
+  {{- if .Values.app.persistentVolume.nfsShareVolume.storageClass }}
+  storageClassName: {{ .Values.app.persistentVolume.nfsShareVolume.storageClass | quote }}
+  {{- end }}
+  {{- with .Values.app.persistentVolume.nfsShareVolume.matchLabels }}
+  selector:
+    matchLabels:
+      {{- toYaml . | nindent 6 }}
+  {{- end }}
+{{- end }}

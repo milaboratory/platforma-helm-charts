@@ -203,7 +203,7 @@ app:
 
             test-assets:
               mode: passive
-          
+
         storages:
           - id: "primary"
             type: S3
@@ -298,9 +298,6 @@ app:
       type: "pvc"
       # -- Mount path
       mountPath: "/storage/controllers/software-loader"
-      # -- When true, no volume will be created for software-loader and it will use the work volume path
-      # When false, it will create its own PVC and mount it
-      useWorkVolume: false
       # -- Array of access modes. Must match those of existing PV or dynamic provisioner.
       accessModes:
         - ReadWriteOnce
@@ -318,6 +315,29 @@ app:
       matchLabels: {}
       # -- Mount path. Server data Persistent Volume mount root path.
       size: 150Gi
+    # -- NFS Share Volume for Google Batch configuration
+    # Note: When using nfsShareVolume, you should disable both work and softwareloader PVCs
+    # as this volume will be used for both work and software-loader data
+    nfsShareVolume:
+      enabled: false
+      type: "pvc"
+      # -- Mount path for shared NFS volume
+      mountPath: "/mnt/platforma-data/instance"
+      # -- Array of access modes. Must match those of existing PV or dynamic provisioner.
+      accessModes:
+        - ReadWriteMany
+      # -- Persistant volume annotations
+      annotations: {}
+      # -- Persistant volume extraLabels
+      extraLabels: {}
+      # -- persistentVolumeReclaimPolicy. The reclaim policy for a PersistentVolume tells the cluster what to do with the volume after it has been released of its claim.
+      reclaimPolicy: ""
+      # -- StorageClass to use for persistent volume. Requires server.persistentVolume.enabled: true. If defined, PVC created automatically
+      storageClass: ""
+      # -- Existing Claim name. If defined, PVC must be created manually before volume will be bound
+      existingClaim: ""
+      # -- Bind Persistent Volume by labels. Must match all labels of targeted PV.
+      matchLabels: {}
   # -- Resource object.
   # ref: [http://kubernetes.io/docs/user-guide/compute-resources/](http://kubernetes.io/docs/user-guide/compute-resources/
   resources: {}
