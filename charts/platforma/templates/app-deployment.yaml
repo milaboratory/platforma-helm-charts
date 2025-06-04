@@ -117,9 +117,12 @@ spec:
           {{- end }}
             - name: database-volume
               mountPath: {{ .Values.app.persistentVolume.database.mountPath }}
+          {{- if .Values.app.persistentVolume.nfsShareVolume.enabled }}
+            - name: nfs-share-volume
+              mountPath: {{ .Values.app.persistentVolume.nfsShareVolume.mountPath }}
+          {{- else }}
             - name: work-volume
               mountPath: {{ .Values.app.persistentVolume.work.mountPath }}
-          {{- if and .Values.app.persistentVolume.softwareloader.enabled (not .Values.app.persistentVolume.softwareloader.useWorkVolume) }}
             - name: software-loader
               mountPath: {{ .Values.app.persistentVolume.softwareloader.mountPath }}
           {{- end }}
@@ -176,13 +179,6 @@ spec:
           secret:
             secretName: {{ template "platforma.fullname" . }}-htpasswd-config
         {{- end }}
-        - name: work-volume
-        {{- if .Values.app.persistentVolume.work.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ if .Values.app.persistentVolume.work.existingClaim }}{{ .Values.app.persistentVolume.work.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-work{{- end }}
-        {{- else }}
-          emptyDir: {}
-        {{- end }}
         - name: database-volume
         {{- if .Values.app.persistentVolume.database.enabled }}
           persistentVolumeClaim:
@@ -190,10 +186,25 @@ spec:
         {{- else }}
           emptyDir: {}
         {{- end }}
-        {{- if and .Values.app.persistentVolume.softwareloader.enabled (not .Values.app.persistentVolume.softwareloader.useWorkVolume) }}
+        {{- if .Values.app.persistentVolume.nfsShareVolume.enabled }}
+        - name: nfs-share-volume
+          persistentVolumeClaim:
+            claimName: {{ if .Values.app.persistentVolume.nfsShareVolume.existingClaim }}{{ .Values.app.persistentVolume.nfsShareVolume.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-nfs-share{{- end }}
+        {{- else }}
+        - name: work-volume
+        {{- if .Values.app.persistentVolume.work.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ if .Values.app.persistentVolume.work.existingClaim }}{{ .Values.app.persistentVolume.work.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-work{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
         - name: software-loader
+        {{- if .Values.app.persistentVolume.softwareloader.enabled }}
           persistentVolumeClaim:
             claimName: {{ if .Values.app.persistentVolume.softwareloader.existingClaim }}{{ .Values.app.persistentVolume.softwareloader.existingClaim }}{{- else }}{{ template "platforma.fullname" . }}-softwareloader{{- end }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
         {{- end }}
     {{- with .Values.app.extraVolumes }}
         {{- toYaml . | nindent 8 }}
