@@ -1,8 +1,15 @@
+## 1.18.8
+
+**Release date:** 2025-06-10
+
+![AppVersion: v1.33.8](https://img.shields.io/static/v1?label=AppVersion&message=v1.33.8&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm
+
 ## 1.18.7
 
 **Release date:** 2025-06-06
 
-![AppVersion: v1.33.6](https://img.shields.io/static/v1?label=AppVersion&message=v1.33.7&color=success&logo=)
+![AppVersion: v1.33.7](https://img.shields.io/static/v1?label=AppVersion&message=v1.33.7&color=success&logo=)
 ![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm
 
 ## 1.18.6
