@@ -1,0 +1,15 @@
+{{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled (not .Values.googleBatch.volumes.existingClaim) .Values.googleBatch.volumes.storageClass -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-google-batch" (include "platforma.fullname" .) }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.googleBatch.volumes.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.googleBatch.volumes.size }}
+  storageClassName: {{ .Values.googleBatch.volumes.storageClass }}
+{{- end -}} 

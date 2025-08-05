@@ -1,3 +1,12 @@
+## 2.0.0
+
+**Release date:** 2025-07-15
+
+![AppVersion: v2.0.0](https://img.shields.io/static/v1?label=AppVersion&message=v2.0.0&color=success&logo=)
+![Helm: v3](https://img.shields.io/static/v1?label=Helm&message=v3&color=informational&logo=helm)
+
+**BREAKING CHANGE:** This version introduces a new chart structure and is not backward-compatible with `1.x` versions. Please refer to the migration guide for instructions on upgrading.
+
 ## 1.21.0
 
 **Release date:** 2025-07-10
