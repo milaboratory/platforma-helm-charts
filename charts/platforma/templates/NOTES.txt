@@ -1,0 +1,51 @@
+{{- /*
+This file is displayed by Helm after a successful installation.
+It provides instructions on how to access the application.
+*/ -}}
+Platforma has been successfully deployed.
+
+To access your application, follow the instructions below based on your service type:
+
+{{- if .Values.ingress.enabled }}
+1. **Get the Ingress Host:**
+   Run the following command to find the host name:
+   ```sh
+   export APP_HOST=$(kubectl get ingress {{ include "platforma.fullname" . }} -o jsonpath='{.spec.rules[0].host}')
+   ```
+
+2. **Access the Application:**
+   You can now access Platforma at:
+   http://{{ .Values.ingress.host }}
+{{- else if contains "NodePort" .Values.service.type }}
+1. **Get the Node IP and Port:**
+   ```sh
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "platforma.fullname" . }})
+   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   ```
+
+2. **Access the Application:**
+   http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+1. **Get the LoadBalancer IP:**
+   It may take a few minutes for the LoadBalancer IP to be available. Watch the status by running:
+   ```sh
+   kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "platforma.fullname" . }}
+   ```
+   Once available, get the IP with:
+   ```sh
+   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "platforma.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+   ```
+
+2. **Access the Application:**
+   http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+1. **Use Port Forwarding:**
+   The service is only accessible within the cluster. You can access it using `port-forward`:
+   ```sh
+   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "platforma.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:{{ .Values.listenOptions.port }}
+   ```
+
+2. **Access the Application:**
+   Visit http://127.0.0.1:8080 in your browser.
+{{- end }} 

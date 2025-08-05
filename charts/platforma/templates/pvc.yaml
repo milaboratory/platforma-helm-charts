@@ -1,0 +1,54 @@
+{{- /*
+This template is for creating PersistentVolumeClaims.
+It supports creating multiple PVCs based on the configuration in values.yaml.
+*/ -}}
+{{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+{{- $firstPvc := true -}}
+
+{{- range $key, $pvc := $allPvcs -}}
+{{- if and $pvc.createPvc (not $pvc.existingClaim) -}}
+{{- if not $firstPvc }}
+---
+{{- end }}
+{{- $firstPvc = false }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "platforma.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - {{ $pvc.accessMode }}
+  resources:
+    requests:
+      storage: {{ $pvc.size }}
+  {{- if $pvc.storageClass }}
+  storageClassName: {{ $pvc.storageClass }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+
+{{- range .Values.dataLibrary.fs -}}
+{{- if and .pvc.enabled (not .pvc.existingClaim) -}}
+{{- if not $firstPvc }}
+---
+{{- end }}
+{{- $firstPvc = false }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ printf "%s-%s" (include "platforma.fullname" $) .id | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "platforma.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .pvc.accessMode }}
+  resources:
+    requests:
+      storage: {{ .pvc.size }}
+  {{- if .pvc.storageClass }}
+  storageClassName: {{ .pvc.storageClass }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

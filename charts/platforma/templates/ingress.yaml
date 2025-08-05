@@ -1,0 +1,44 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "platforma.fullname" . }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- if .Values.ingress.paths.grpc.enabled }}
+          - path: {{ .Values.ingress.paths.grpc.path }}
+            pathType: {{ .Values.ingress.paths.grpc.pathType }}
+            backend:
+              service:
+                name: {{ include "platforma.fullname" . }}
+                port:
+                  name: grpc
+          {{- end }}
+          {{- if and .Values.primaryStorage.fs.enabled .Values.ingress.paths.http.enabled }}
+          - path: {{ .Values.ingress.paths.http.path }}
+            pathType: {{ .Values.ingress.paths.http.pathType }}
+            backend:
+              service:
+                name: {{ include "platforma.fullname" . }}-http
+                port:
+                  name: http
+          {{- end }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}

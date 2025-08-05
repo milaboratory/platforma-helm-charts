@@ -1,0 +1,21 @@
+{{- if .Values.primaryStorage.fs.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "platforma.fullname" . }}-http
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+  {{- with .Values.primaryStorage.fs.httpService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.primaryStorage.fs.httpService.type }}
+  ports:
+    - port: {{ .Values.listenOptions.httpPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "platforma.selectorLabels" . | nindent 4 }}
+{{- end }} 

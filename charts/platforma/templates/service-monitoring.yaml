@@ -1,0 +1,21 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "platforma.fullname" . }}-monitoring
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+  {{- with .Values.monitoring.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.monitoring.service.type }}
+  ports:
+    - port: {{ .Values.monitoring.port }}
+      targetPort: monitoring
+      protocol: TCP
+      name: monitoring
+  selector:
+    {{- include "platforma.selectorLabels" . | nindent 4 }}
+{{- end }} 

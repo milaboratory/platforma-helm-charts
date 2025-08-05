@@ -1,0 +1,21 @@
+{{- if .Values.debug.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "platforma.fullname" . }}-debug
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+  {{- with .Values.debug.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.debug.service.type }}
+  ports:
+    - port: {{ .Values.debug.port }}
+      targetPort: debug
+      protocol: TCP
+      name: debug
+  selector:
+    {{- include "platforma.selectorLabels" . | nindent 4 }}
+{{- end }} 
