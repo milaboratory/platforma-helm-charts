@@ -242,7 +242,6 @@ logging:
 When deploying to a production environment, consider the following:
 
 - **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance.
-- **High Availability**: Enable the Horizontal Pod Autoscaler (`hpa.enabled: true`) and configure a Pod Disruption Budget (`pdb.enabled: true`) for resilience.
 - **Security**:
   - Use a dedicated `serviceAccount` and link it to a cloud IAM role for secure access to cloud resources.
   - Configure the `deployment.securityContext` and `deployment.podSecurityContext` to run the application with the least required privileges.
