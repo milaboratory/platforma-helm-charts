@@ -59,7 +59,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Fetch all history so we can push back to the repo
+          ref: main
           fetch-depth: 0
 
       - name: Set up Helm
@@ -100,7 +100,8 @@ jobs:
 
       - name: Update Helm repository index
         run: |
-          helm repo index packages/ --url https://milaboratory.github.io/platforma-helm-charts > index.yaml
+          helm repo index packages/ --url https://milaboratory.github.io/platforma-helm-charts
+          mv packages/index.yaml index.yaml
 
       - name: Commit and push changes
         run: |
