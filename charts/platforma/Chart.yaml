@@ -12,7 +12,7 @@ keywords:
   - platforma
   - kubernetes
 annotations:
-  artifacthub.io/links: |
+  artifacthub.io/links: |-
     - name: Sources
       url: https://platforma.bio/downloads/
     - name: Charts repo
