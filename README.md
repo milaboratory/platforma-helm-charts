@@ -6,24 +6,41 @@ This Helm chart deploys the Platforma application to a Kubernetes cluster.
 
 ## Prerequisites
 
-- **Helm**: v3.0.0+
-- **Kubernetes**: v1.19.0+
+- **Helm**: v3.8.0+ (for OCI support)
+- **Kubernetes**: v1.25.0+
 - **Persistent Volume Provisioner**: A dynamic provisioner is required if you are using persistence (enabled by default).
 - **Ingress Controller**: An Ingress controller (e.g., [NGINX Ingress Controller](https://kubernetes.github.io/ingress-nginx/)) must be installed in the cluster to use the Ingress resource.
 
-## Quick Start Guide
+## Installation
 
-To install the chart with the release name `my-platforma`:
+There are two recommended methods for installing the Platforma Helm chart.
+
+### Method 1: Install from OCI Registry (Recommended)
+
+This is the preferred method for modern Helm versions. It pulls the chart directly from the GitHub Container Registry.
 
 ```sh
-# Add the chart repository (replace with your actual repo URL)
+# Replace <version> with the specific chart version you want to install
+helm install my-platforma oci://ghcr.io/milaboratory/platforma-helm-charts/platforma --version <version>
+```
+
+### Method 2: Install from Helm Repository
+
+This method uses the traditional Helm repository hosted on GitHub Pages.
+
+**1. Add the Helm Repository:**
+```sh
 helm repo add platforma https://milaboratory.github.io/platforma-helm-charts
-
-# Update your local chart repository cache
 helm repo update
+```
 
-# Install the chart
-helm install my-platforma platforma/platforma
+**2. Install the Chart:**
+```sh
+# You can search for available versions
+helm search repo platforma/platforma --versions
+
+# Install the chart (replace <version> with the desired chart version)
+helm install my-platforma platforma/platforma --version <version>
 ```
 
 ## Migrating from 1.x to 2.0.0
@@ -244,7 +261,7 @@ When deploying to a production environment, consider the following:
 - **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance.
 - **Security**:
   - Use a dedicated `serviceAccount` and link it to a cloud IAM role for secure access to cloud resources.
-  - Configure the `deployment.securityContext` and `deployment.podSecurityContext` to run the application with the least required privileges.
+  - Configure the `deployment.securityContext` and `podSecurityContext` to run the application with the least required privileges.
 - **Networking**:
   - For secure external access, configure the `ingress` with a real TLS certificate.
   - Use `networkPolicy` to restrict traffic between pods for a more secure network posture.
