@@ -34,10 +34,6 @@ conventional_commits = true
 filter_unconventional = true
 # process the commits starting from the latest tag
 starting_commit = "HEAD"
-# group the commits by sections
-commit_preprocessors = [
-    { pattern = '.*', replace = ''},
-]
 # regex for parsing and grouping commits
 commit_parsers = [
     { message = "^feat", group = "Features" },
@@ -55,4 +51,3 @@ commit_parsers = [
 protect_breaking_commits = false
 # sort the commits by date
 sort_commits = "newest"
-
