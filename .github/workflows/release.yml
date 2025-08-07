@@ -100,7 +100,7 @@ jobs:
 
       - name: Update Helm repository index
         run: |
-          helm repo index packages/ --url https://milaboratory.github.io/platforma-helm-charts
+          helm repo index packages/ --url https://milaboratory.github.io/platforma-helm-charts/packages/
           mv packages/index.yaml index.yaml
 
       - name: Commit and push changes
