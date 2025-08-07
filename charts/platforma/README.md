@@ -298,3 +298,21 @@ When deploying to a production environment, consider the following:
 - **Networking**:
   - For secure external access, configure the `ingress` with a real TLS certificate.
   - Use `networkPolicy` to restrict traffic between pods for a more secure network posture.
+- **IAM Integration for AWS EKS and GCP GKE**:
+  When running on managed Kubernetes services like AWS EKS or GCP GKE, it is common practice to associate Kubernetes service accounts with cloud IAM roles for fine-grained access control. You can add the necessary annotations to the `ServiceAccount` created by this chart using the `serviceAccount.annotations` value.
+
+  **AWS EKS Example (IAM Roles for Service Accounts - IRSA):**
+  ```yaml
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/MyPlatformaIAMRole"
+  ```
+
+  **GCP GKE Example (Workload Identity):**
+  ```yaml
+  serviceAccount:
+    create: true
+    annotations:
+      iam.gke.io/gcp-service-account: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
+  ```
