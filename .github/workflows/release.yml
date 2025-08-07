@@ -89,7 +89,7 @@ jobs:
           yq -i '.version = "${{ steps.get_chart_info.outputs.chart_version }}"' charts/${{ steps.get_chart_info.outputs.chart_name }}/Chart.yaml
 
       - name: Generate Changelog
-        uses: orhun/git-cliff-action@v2
+        uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
           args: --verbose --tag ${{ github.ref_name }} --prepend charts/platforma/CHANGELOG.md
