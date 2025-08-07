@@ -131,11 +131,6 @@ env:
         key: mi-license-key
 ```
 
-### Runner Options
-
-The `runnerOptions` section controls the resources available for local execution.
-
-- **`localCpu`** and **`localRam`**: These values determine the CPU and RAM allocated for local jobs. **Crucially, if you leave these fields empty, they will automatically align with the pod's resource limits** (`resources.limits.cpu` and `resources.limits.memory`). This is the recommended approach to ensure the runner does not exceed the resources allocated to the pod.
 
 ### Persistence
 
@@ -211,11 +206,40 @@ Data libraries allow you to mount additional datasets into the application. You 
 - **GCS Libraries**: Configure GCS-backed libraries under `dataLibrary.gcs`.
 - **FS Libraries**: Configure filesystem-backed libraries under `dataLibrary.fs`, which will be provisioned using PVCs.
 
-### Google Batch
+### Google Batch Integration
 
-When using Google Batch for job execution, you can specify a dedicated service account for the batch jobs.
+This chart supports integration with Google Batch for offloading job execution. This is useful for large-scale data processing tasks. To enable this, you need a shared filesystem (like NFS) that is accessible by both the Platforma pod and the Google Batch jobs. Google Cloud Filestore is a common choice for this.
 
-- **`googleBatch.serviceAccount`**: The email address of the GCP service account to be used for running Google Batch jobs.
+**Configuration:**
+
+The `googleBatch` section in `values.yaml` controls this integration.
+
+-   **`enabled`**: Set to `true` to enable Google Batch integration.
+-   **`storage`**: Specifies the mapping between a local path in the container and the shared NFS volume. The format is `<local-path>=<nfs-uri>`.
+-   **`project`**: Your Google Cloud Project ID.
+-   **`region`**: The GCP region where Batch jobs will run.
+-   **`serviceAccount`**: The email of the GCP service account that Google Batch jobs will use. This service account needs appropriate permissions for Batch and storage access.
+-   **`network` / `subnetwork`**: The VPC network and subnetwork for the Batch jobs.
+-   **`volumes`**: This section configures the PersistentVolumeClaim for the shared NFS volume. You must provide the `existingClaim` name for your pre-provisioned NFS PVC (e.g., from Filestore).
+
+**Example Configuration:**
+
+```yaml
+googleBatch:
+  enabled: true
+  storage: "/data/platforma-data=nfs://10.0.0.2/fileshare"
+  project: "my-gcp-project-id"
+  region: "us-central1"
+  serviceAccount: "batch-executor@my-gcp-project-id.iam.gserviceaccount.com"
+  network: "projects/my-gcp-project-id/global/networks/default"
+  subnetwork: "projects/my-gcp-project-id/regions/us-central1/subnetworks/default"
+  volumes:
+    enabled: true
+    existingClaim: "my-filestore-pvc"
+    accessMode: "ReadWriteMany"
+```
+
+This configuration assumes you have already created a Google Cloud Filestore instance and a corresponding PersistentVolumeClaim (`my-filestore-pvc`) in your Kubernetes cluster.
 
 #### Example S3 Data Library
 
@@ -258,7 +282,16 @@ logging:
 
 When deploying to a production environment, consider the following:
 
-- **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance.
+- **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance. For example:
+  ```yaml
+  resources:
+    limits:
+      cpu: 8000m
+      memory: 16Gi
+    requests:
+      cpu: 4000m
+      memory: 8Gi
+  ```
 - **Security**:
   - Use a dedicated `serviceAccount` and link it to a cloud IAM role for secure access to cloud resources.
   - Configure the `deployment.securityContext` and `podSecurityContext` to run the application with the least required privileges.
