@@ -260,19 +260,19 @@ persistence:
   # If enabled, this creates a single PVC for all application data.
   # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
   mainRoot:
-    enabled: false
+    enabled: true
     # -- If true, a PVC will be created for the main root directory.
     createPvc: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
-    size: 100Gi
+    size: 500Gi
     # storageClass: "standard"
     mountPath: /data/platforma-data
   # -- Configuration for the database volume (advanced setup).
   # Only used if `persistence.mainRoot.enabled` is false.
   dbDir:
-    enabled: true
+    enabled: false
     # -- If true, a PVC will be created for the database directory.
     createPvc: true
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
@@ -401,7 +401,7 @@ dataLibrary:
     #     existingClaim: ""
     #     accessMode: ReadWriteOnce
     #     size: 10Gi
-    #     storageClass: "standard"      
+    #     storageClass: "standard"
   # -- GCS data libraries
   gcs: []
     # - id: "my-gcs-library"
