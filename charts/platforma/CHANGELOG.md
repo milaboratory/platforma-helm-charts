@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.0.5] - 2025-08-08
+### Miscellaneous Tasks
+
+- Expand values.schema.json coverage; no template changes ([`e7f5aaa`](https://github.com/milaboratory/platforma-helm-charts/commit/e7f5aaae6380af93293b27df3ea7d0bda5c24a3a))
+
 ## [v2.0.4] - 2025-08-08
 ### Miscellaneous Tasks
 
