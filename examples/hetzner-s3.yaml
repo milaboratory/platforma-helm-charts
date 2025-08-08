@@ -1,0 +1,108 @@
+# Example: Hetzner (S3-compatible object storage)
+
+image:
+  repository: quay.io/milaboratories/platforma
+  pullPolicy: IfNotPresent
+  tag: ""
+env:
+  variables:
+    AWS_REGION: eu-central-1
+  secretVariables:
+    - name: AWS_ACCESS_KEY_ID
+      secretKeyRef:
+        name: hetzner-s3-credentials
+        key: access-key
+    - name: AWS_SECRET_ACCESS_KEY
+      secretKeyRef:
+        name: hetzner-s3-credentials
+        key: secret-key
+
+# Authentication (LDAP)
+authOptions:
+  ldap:
+    enabled: true
+    server: "ldap://your-ldap-service.namespace.svc.cluster.local:389"
+    dn: "cn=%u,ou=users,ou=users,dc=example,dc=org"
+    tls:
+      enabled: false
+      secretRef:
+        enabled: false
+
+serviceAccount:
+  create: true
+
+ingress:
+  enabled: true
+  className: "traefik"
+  host: platforma.example.hetzner.local
+  tls:
+    enabled: false
+
+service:
+  type: ClusterIP
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: h2c
+
+persistence:
+  mainRoot:
+    enabled: false
+  dbDir:
+    enabled: true
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    storageClass: "local-path"
+    mountPath: /db
+  workDir:
+    enabled: true
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 50Gi
+    storageClass: "local-path"
+    mountPath: /data/work
+  packagesDir:
+    enabled: true
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 50Gi
+    storageClass: "local-path"
+    mountPath: /storage/controllers/software-loader
+
+primaryStorage:
+  s3:
+    enabled: true
+    # Hetzner Object Storage is S3-compatible; provide access/secret via a Secret
+    url: "https://fsn1.your-objectstorage.example.com/example-platforma-bucket/primary/"
+    secretRef:
+      enabled: false
+  fs:
+    enabled: false
+  gcs:
+    enabled: false
+
+dataLibrary:
+  s3:
+    - id: "library"
+      enabled: true
+      url: "https://fsn1.your-objectstorage.example.com/example-platforma-bucket/corp-library/"
+      secretRef:
+        enabled: false
+    - id: "test-assets"
+      enabled: true
+      url: "https://fsn1.your-objectstorage.example.com/example-platforma-bucket/test-assets/"
+      secretRef:
+        enabled: false
+
+monitoring:
+  enabled: true
+  port: 9090
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+

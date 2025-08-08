@@ -6,7 +6,12 @@ It supports creating multiple PVCs based on the configuration in values.yaml.
 {{- $firstPvc := true -}}
 
 {{- range $key, $pvc := $allPvcs -}}
-{{- if and $pvc.createPvc (not $pvc.existingClaim) -}}
+{{- $shouldCreate := and (not $pvc.existingClaim) $pvc.createPvc -}}
+{{- if and (eq $key "primary-storage") (not $pvc.existingClaim) (not $shouldCreate) $pvc.storageClass -}}
+  {{- /* For primary storage FS PVC, allow implicit creation when storageClass is set */ -}}
+  {{- $shouldCreate = true -}}
+{{- end -}}
+{{- if $shouldCreate -}}
 {{- if not $firstPvc }}
 ---
 {{- end }}

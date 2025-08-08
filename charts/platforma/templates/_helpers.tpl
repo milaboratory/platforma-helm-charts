@@ -49,26 +49,41 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{/*
+Returns the GCP service account to use, preferring explicit fields and falling back to .Values.gcp.serviceAccount
+*/}}
+{{- define "platforma.gcpServiceAccount" -}}
+{{- $sa := "" -}}
+{{- if .Values.gcp.serviceAccount -}}
+  {{- $sa = .Values.gcp.serviceAccount -}}
+{{- end -}}
+{{- if and (not $sa) .Values.primaryStorage.gcs.serviceAccount -}}
+  {{- $sa = .Values.primaryStorage.gcs.serviceAccount -}}
+{{- end -}}
+{{- if and (not $sa) .Values.googleBatch.serviceAccount -}}
+  {{- $sa = .Values.googleBatch.serviceAccount -}}
+{{- end -}}
+{{- $sa -}}
+{{- end -}}
+
 # Gathers all *enabled* PVC configurations.
 {{- define "platforma.allPvcs" -}}
 {{- $allPvcs := dict -}}
-{{- if .Values.persistence.globalEnabled -}}
-  {{- if .Values.persistence.mainRoot.enabled -}}
-    {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
-  {{- else -}}
-    {{- if .Values.persistence.dbDir.enabled -}}
-      {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
-    {{- end -}}
-    {{- if and .Values.persistence.workDir.enabled (not .Values.googleBatch.enabled) -}}
-      {{- $_ := set $allPvcs "work" .Values.persistence.workDir -}}
-    {{- end -}}
-    {{- if and .Values.persistence.packagesDir.enabled (not .Values.googleBatch.enabled) -}}
-      {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
-    {{- end -}}
+{{- if and .Values.persistence.mainRoot.enabled (not .Values.googleBatch.enabled) -}}
+  {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
+{{- else -}}
+  {{- if .Values.persistence.dbDir.enabled -}}
+    {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
   {{- end -}}
-  {{- if and (hasPrefix "dir://" .Values.logging.destination) .Values.logging.persistence.enabled -}}
-    {{- $_ := set $allPvcs "logs" .Values.logging.persistence -}}
+  {{- if and .Values.persistence.workDir.enabled (not .Values.googleBatch.enabled) -}}
+    {{- $_ := set $allPvcs "work" .Values.persistence.workDir -}}
   {{- end -}}
+  {{- if and .Values.persistence.packagesDir.enabled (not .Values.googleBatch.enabled) -}}
+    {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
+  {{- end -}}
+{{- end -}}
+{{- if and (hasPrefix "dir://" .Values.logging.destination) .Values.logging.persistence.enabled -}}
+  {{- $_ := set $allPvcs "logs" .Values.logging.persistence -}}
 {{- end -}}
 {{- if and .Values.primaryStorage.fs.enabled .Values.primaryStorage.fs.pvc.enabled -}}
   {{- $_ := set $allPvcs "primary-storage" .Values.primaryStorage.fs.pvc -}}
@@ -81,13 +96,46 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "%s" (mustToJson $allPvcs) -}}
 {{- end -}}
 
+{{/*
+Validate Persistence Configuration
+This helper enforces:
+- If mainRoot.enabled is false, at least one of dbDir/workDir/packagesDir must be enabled
+- For each enabled persistence section (mainRoot, dbDir, workDir, packagesDir), either existingClaim must be set or createPvc: true
+*/}}
+{{- define "platforma.validatePersistence" -}}
+{{- if not .Values.googleBatch.enabled -}}
+  {{- $p := .Values.persistence -}}
+  {{- if not $p.mainRoot.enabled -}}
+    {{- $db := $p.dbDir.enabled | default false -}}
+    {{- $work := $p.workDir.enabled | default false -}}
+    {{- $pkg := $p.packagesDir.enabled | default false -}}
+    {{- if not (or $db $work $pkg) -}}
+      {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $sections := dict "mainRoot" $p.mainRoot "dbDir" $p.dbDir "workDir" $p.workDir "packagesDir" $p.packagesDir -}}
+  {{- range $name, $cfg := $sections -}}
+    {{- if and $cfg $cfg.enabled -}}
+      {{- if and (not $cfg.existingClaim) (not $cfg.createPvc) -}}
+        {{- fail (printf "Persistence misconfiguration: persistence.%s.enabled is true, but neither existingClaim nor createPvc is set." $name) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}
+
 # Constructs a list of volumes to be mounted to the main application container.
 # This helper gathers all enabled PVC configurations, determines whether to use an
 # existing claim or a generated one, and creates the corresponding volume definition.
 {{- define "platforma.volumes" -}}
 {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
 {{- range $key, $pvc := $allPvcs -}}
-{{- if or $pvc.existingClaim $pvc.createPvc }}
+{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
+{{- if and (not $attach) (eq $key "primary-storage") -}}
+  {{- /* For primary storage FS, attach volume if pvc.enabled is true */ -}}
+  {{- $attach = and $.Values.primaryStorage.fs.enabled $.Values.primaryStorage.fs.pvc.enabled -}}
+{{- end -}}
+{{- if $attach }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   persistentVolumeClaim:
     claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-") | quote }}
@@ -101,7 +149,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "platforma.volumeMounts" -}}
 {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
 {{- range $key, $pvc := $allPvcs -}}
-{{- if or $pvc.existingClaim $pvc.createPvc }}
+{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
+{{- if and (not $attach) (eq $key "primary-storage") -}}
+  {{- /* For primary storage FS, attach volume if pvc.enabled is true */ -}}
+  {{- $attach = and $.Values.primaryStorage.fs.enabled $.Values.primaryStorage.fs.pvc.enabled -}}
+{{- end -}}
+{{- if $attach }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   mountPath: {{ $pvc.mountPath }}
 {{- end -}}

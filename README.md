@@ -43,6 +43,20 @@ helm search repo platforma/platforma --versions
 helm install my-platforma platforma/platforma --version <version>
 ```
 
+## Configuration overview
+
+- **image**: repository, tag (defaults to `appVersion`), pullPolicy, `imagePullSecrets`.
+- **service**: gRPC Service on `listenOptions.port` (default 6345). Optional HTTP Service only when `primaryStorage.fs.enabled` is true.
+- **ingress**: Single `host`; gRPC path always when enabled; HTTP path only if `primaryStorage.fs.enabled`.
+- **probes**: `httpGet`, `tcpSocket`, or `grpc`, separately configurable for liveness/readiness.
+- **deployment**: strategy, pod labels/annotations, securityContext and podSecurityContext.
+- **persistence**: either single `mainRoot` PVC or split `dbDir`/`workDir`/`packagesDir` PVCs; optional logging PVC; optional FS data libraries; optional FS primary storage PVC.
+- **primaryStorage (exclusive)**: Exactly one of S3, FS, or GCS must be enabled; the chart validates this and fails otherwise.
+- **dataLibrary**: Additional S3/GCS/FS libraries.
+- **authOptions**: htpasswd or LDAP (+ TLS via paths or secretRef).
+- **googleBatch**: CLI args and optional shared NFS PVC for offloaded jobs.
+- **monitoring/debug**: Optional Services and ports.
+
 ## Migrating from 1.x to 2.0.0
 
 Version `2.0.0` of this Helm chart introduces significant structural changes and is not backward-compatible with `1.x` versions. A manual migration is required to upgrade existing releases while preserving data.
@@ -68,7 +82,6 @@ The key change is the refactoring of the `values.yaml` file for better organizat
     # migration-values.yaml
 
     persistence:
-      globalEnabled: true
 
       dbDir:
         enabled: true
@@ -134,7 +147,19 @@ env:
 
 ### Persistence
 
-The chart uses PersistentVolumeClaims (PVCs) to store application data, ensuring that your data is not lost if the pod restarts. Persistence is enabled by default and can be configured under the `persistence` section in `values.yaml`.
+Persistence is enabled by default and controlled under `persistence`:
+
+- Remove the former `globalEnabled`; behavior now depends on `mainRoot.enabled` vs split volumes.
+- **mainRoot (default)**: a single PVC mounted at `persistence.mainRoot.mountPath` (default `/data/platforma-data`). When `mainRoot.enabled: true`, the split volumes below are ignored.
+- **Split volumes**: only used when `mainRoot.enabled: false`:
+  - `dbDir`: RocksDB state
+  - `workDir`: working directory
+  - `packagesDir`: software packages
+  For each, either set `existingClaim` or `createPvc: true` (+ `size`, optional `storageClass`).
+- **Logging persistence**: when `logging.destination` is a `dir://` path and `logging.persistence.enabled` is true, the chart mounts a PVC at `logging.persistence.mountPath`.
+- **FS data libraries**: each entry in `dataLibrary.fs` can create or reuse a PVC and is mounted at its `path`.
+
+Tip: set `existingClaim` to reuse an existing volume; otherwise set `createPvc: true` and specify `size` (and `storageClass` if needed).
 
 ---
 
@@ -198,6 +223,10 @@ primaryStorage:
     serviceAccount: "my-gcs-service-account@my-gcp-project-id.iam.gserviceaccount.com"
 ```
 
+#### Primary Storage validation (important)
+
+Exactly one of `primaryStorage.s3.enabled`, `primaryStorage.fs.enabled`, or `primaryStorage.gcs.enabled` must be true. The chart validates this at render time and will fail if none or multiple are enabled.
+
 ### Data Libraries
 
 Data libraries allow you to mount additional datasets into the application. You can configure multiple libraries of different types.
@@ -220,7 +249,7 @@ The `googleBatch` section in `values.yaml` controls this integration.
 -   **`region`**: The GCP region where Batch jobs will run.
 -   **`serviceAccount`**: The email of the GCP service account that Google Batch jobs will use. This service account needs appropriate permissions for Batch and storage access.
 -   **`network` / `subnetwork`**: The VPC network and subnetwork for the Batch jobs.
--   **`volumes`**: This section configures the PersistentVolumeClaim for the shared NFS volume. You must provide the `existingClaim` name for your pre-provisioned NFS PVC (e.g., from Filestore).
+-   **`volumes`**: Configures the shared NFS volume. Provide EITHER `existingClaim` (reuse an existing PVC) OR `storageClass` + `size` (let the chart create a PVC). Set `accessMode` as needed (default `ReadWriteMany`).
 
 **Example Configuration:**
 
@@ -235,8 +264,10 @@ googleBatch:
   subnetwork: "projects/my-gcp-project-id/regions/us-central1/subnetworks/default"
   volumes:
     enabled: true
-    existingClaim: "my-filestore-pvc"
+    existingClaim: "my-filestore-pvc" # or omit and set storageClass + size for dynamic provisioning
     accessMode: "ReadWriteMany"
+    # storageClass: "filestore-rwx"
+    # size: "1Ti"
 ```
 
 This configuration assumes you have already created a Google Cloud Filestore instance and a corresponding PersistentVolumeClaim (`my-filestore-pvc`) in your Kubernetes cluster.
@@ -285,6 +316,17 @@ When deploying to a production environment, consider the following:
 - **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance. For example:
   ```yaml
   resources:
+    # Default (sane for small clusters/testing)
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  ```
+  For production, consider increasing resources as needed, e.g.:
+  ```yaml
+  resources:
     limits:
       cpu: 8000m
       memory: 16Gi
@@ -298,6 +340,57 @@ When deploying to a production environment, consider the following:
 - **Networking**:
   - For secure external access, configure the `ingress` with a real TLS certificate.
   - Use `networkPolicy` to restrict traffic between pods for a more secure network posture.
+- **Ingress specifics**:
+  - The HTTP port and `-http` Service exist only when `primaryStorage.fs.enabled` is true. The Ingress HTTP path is added only in that case. gRPC access is always via the main Service.
+- **Traefik + gRPC (h2c)**:
+  - If you use Traefik, you may need to enable h2c on the Service:
+    ```yaml
+    service:
+      annotations:
+        traefik.ingress.kubernetes.io/service.serversscheme: "h2c"
+    ```
+- **Image pull secrets**:
+  - For private registries, set:
+    ```yaml
+    imagePullSecrets:
+      - name: regcred
+    ```
+- **NetworkPolicy**:
+  - Enable and define ingress/egress rules under `networkPolicy` if your cluster enforces them.
+- **Security defaults**:
+  - The chart defaults to running the container as root (`runAsUser: 0`). Consider hardening via `deployment.securityContext` and `deployment.podSecurityContext` to comply with cluster policies.
+
+### Examples
+
+Ready-to-use example values are provided under the `examples/` directory:
+
+- `examples/hetzner-s3.yaml`
+- `examples/aws-s3.yaml`
+- `examples/gke-gcs.yaml`
+- `examples/fs-primary.yaml`
+
+> Important: Always review and adapt example files before deployment. Replace placeholders (bucket names, domains, storageClass, regions, service account emails, credentials) with values that match your environment and security policies.
+
+### S3 credentials via Secret (example)
+
+```sh
+kubectl create secret generic my-s3-secret \
+  --from-literal=access-key=AKIA... \
+  --from-literal=secret-key=abcd1234...
+```
+
+```yaml
+primaryStorage:
+  s3:
+    enabled: true
+    url: "s3://my-bucket/primary/"
+    region: "eu-central-1"
+    secretRef:
+      enabled: true
+      name: my-s3-secret
+      keyKey: access-key
+      secretKey: secret-key
+```
 - **IAM Integration for AWS EKS and GCP GKE**:
   When running on managed Kubernetes services like AWS EKS or GCP GKE, it is common practice to associate Kubernetes service accounts with cloud IAM roles for fine-grained access control. You can add the necessary annotations to the `ServiceAccount` created by this chart using the `serviceAccount.annotations` value.
 
@@ -316,3 +409,67 @@ When deploying to a production environment, consider the following:
     annotations:
       iam.gke.io/gcp-service-account: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
   ```
+
+## Minimal cloud permissions
+
+When running on GKE with GCS/Batch or on EKS with S3, grant at least the following permissions to the cloud identity used by the chart.
+
+### GCP (GKE + GCS + Google Batch)
+
+Assign these roles to the GCP service account mapped via Workload Identity:
+
+- roles/storage.objectAdmin
+- roles/batch.jobsEditor
+- roles/batch.agentReporter
+- roles/iam.serviceAccountTokenCreator
+- roles/artifactregistry.reader
+- roles/logging.logWriter
+
+### AWS (EKS + S3)
+
+Attach an IAM policy similar to the following to the role mapped via IRSA. Substitute placeholders with your own values:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListEntireBucketAndMultipartActions",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "arn:aws:s3:::example-bucket-name"
+    },
+    {
+      "Sid": "FullAccessUserSpecific",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:GetObjectAttributes",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::example-bucket-name/user-demo",
+        "arn:aws:s3:::example-bucket-name/user-demo/*"
+      ]
+    },
+    {
+      "Sid": "GetObjectCommonPrefixes",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectAttributes"
+      ],
+      "Resource": [
+        "arn:aws:s3:::example-bucket-name/corp-library/*",
+        "arn:aws:s3:::example-bucket-name/test-assets/*"
+      ]
+    }
+  ]
+}
+```
