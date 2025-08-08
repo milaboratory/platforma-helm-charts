@@ -5,6 +5,56 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "primaryStorage": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "s3": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "fs": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "pvc": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "existingClaim": { "type": "string" },
+                "storageClass": { "type": "string" },
+                "size": { "type": "string" },
+                "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] },
+                "mountPath": { "type": "string" }
+              },
+              "allOf": [
+                {
+                  "if": { "properties": { "enabled": { "const": true } } },
+                  "then": {
+                    "anyOf": [
+                      { "required": ["existingClaim"] },
+                      { "required": ["storageClass", "size"] }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "gcs": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
     "persistence": {
       "type": "object",
       "additionalProperties": true,
@@ -20,7 +70,22 @@
             "size": { "type": "string" },
             "storageClass": { "type": "string" },
             "mountPath": { "type": "string" }
-          }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "enabled": { "const": true } } },
+              "then": {
+                "anyOf": [
+                  { "required": ["existingClaim"] },
+                  { "properties": { "createPvc": { "const": true } }, "required": ["createPvc"] }
+                ]
+              }
+            },
+            {
+              "if": { "properties": { "createPvc": { "const": true } } },
+              "then": { "required": ["size"] }
+            }
+          ]
         },
         "dbDir": {
           "type": "object",
@@ -33,7 +98,22 @@
             "size": { "type": "string" },
             "storageClass": { "type": "string" },
             "mountPath": { "type": "string" }
-          }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "enabled": { "const": true } } },
+              "then": {
+                "anyOf": [
+                  { "required": ["existingClaim"] },
+                  { "properties": { "createPvc": { "const": true } }, "required": ["createPvc"] }
+                ]
+              }
+            },
+            {
+              "if": { "properties": { "createPvc": { "const": true } } },
+              "then": { "required": ["size"] }
+            }
+          ]
         },
         "workDir": {
           "type": "object",
@@ -46,7 +126,22 @@
             "size": { "type": "string" },
             "storageClass": { "type": "string" },
             "mountPath": { "type": "string" }
-          }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "enabled": { "const": true } } },
+              "then": {
+                "anyOf": [
+                  { "required": ["existingClaim"] },
+                  { "properties": { "createPvc": { "const": true } }, "required": ["createPvc"] }
+                ]
+              }
+            },
+            {
+              "if": { "properties": { "createPvc": { "const": true } } },
+              "then": { "required": ["size"] }
+            }
+          ]
         },
         "packagesDir": {
           "type": "object",
@@ -59,7 +154,22 @@
             "size": { "type": "string" },
             "storageClass": { "type": "string" },
             "mountPath": { "type": "string" }
-          }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "enabled": { "const": true } } },
+              "then": {
+                "anyOf": [
+                  { "required": ["existingClaim"] },
+                  { "properties": { "createPvc": { "const": true } }, "required": ["createPvc"] }
+                ]
+              }
+            },
+            {
+              "if": { "properties": { "createPvc": { "const": true } } },
+              "then": { "required": ["size"] }
+            }
+          ]
         }
       },
       "allOf": [
@@ -120,6 +230,14 @@
     }
   },
   "allOf": [
+    {
+      "oneOf": [
+        { "properties": { "primaryStorage": { "properties": { "s3": { "properties": { "enabled": { "const": true } } } } } } },
+        { "properties": { "primaryStorage": { "properties": { "fs": { "properties": { "enabled": { "const": true } } } } } } },
+        { "properties": { "primaryStorage": { "properties": { "gcs": { "properties": { "enabled": { "const": true } } } } } } }
+      ],
+      "errorMessage": "Exactly one primaryStorage must be enabled (s3, fs, or gcs)."
+    },
     {
       "if": {
         "properties": {
