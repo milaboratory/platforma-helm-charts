@@ -48,4 +48,47 @@ To access your application, follow the instructions below based on your service 
 
 2. **Access the Application:**
    Visit http://127.0.0.1:8080 in your browser.
-{{- end }} 
+{{- end }}
+
+{{- if .Values.primaryStorage.fs.enabled }}
+
+Filesystem primary storage is enabled.
+
+1. Verify the PVC backing the FS storage:
+   ```sh
+   export FS_PVC={{ ( .Values.primaryStorage.fs.pvc.existingClaim | default (printf "%s-primary-storage" (include "platforma.fullname" .)) ) }}
+   kubectl get pvc $FS_PVC -o wide
+   ```
+
+2. Discover the FS HTTP endpoint:
+   {{- if and .Values.ingress.enabled .Values.ingress.paths.http.enabled }}
+   - Via Ingress: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}{{ .Values.ingress.paths.http.path }}
+   {{- else if eq .Values.primaryStorage.fs.httpService.type "LoadBalancer" }}
+   - Via LoadBalancer Service:
+     ```sh
+     export FS_SERVICE={{ include "platforma.fullname" . }}-http
+     export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} $FS_SERVICE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+     echo http://$SERVICE_IP:{{ .Values.listenOptions.httpPort }}
+     ```
+   {{- else if eq .Values.primaryStorage.fs.httpService.type "NodePort" }}
+   - Via NodePort Service:
+     ```sh
+     export FS_SERVICE={{ include "platforma.fullname" . }}-http
+     export NODE_PORT=$(kubectl get svc --namespace {{ .Release.Namespace }} $FS_SERVICE -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')
+     export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath='{.items[0].status.addresses[0].address}')
+     echo http://$NODE_IP:$NODE_PORT
+     ```
+   {{- else }}
+   - Via ClusterIP Service (port-forward):
+     ```sh
+     export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "platforma.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath='{.items[0].metadata.name}')
+     kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:{{ .Values.listenOptions.httpPort }}
+     echo http://127.0.0.1:8080
+     ```
+   {{- end }}
+
+3. Note:
+   - The FS endpoint is exposed by the Service `{{ include "platforma.fullname" . }}-http` on port {{ .Values.listenOptions.httpPort }}.
+   - The application will use this endpoint automatically when `primaryStorage.fs.autoUrl` is true; otherwise it uses the URL you configured at `primaryStorage.fs.url`.
+
+{{- end }}
