@@ -15,7 +15,7 @@ body = """
 {% else %}\
     ## [unreleased]
 {% endif %}\
-{% for group, commits in commits | group_by(attribute="group") | sort(attribute="group") %}\
+{% for group, commits in commits | group_by(attribute="group") %}\
     ### {{ group | upper_first }}
     {% for commit in commits %}
         - {{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/milaboratory/platforma-helm-charts/commit/{{ commit.id }}))\
