@@ -227,6 +227,153 @@
           ]
         }
       }
+    },
+    "replicaCount": { "type": "integer", "minimum": 0 },
+    "image": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "repository": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] },
+        "tag": { "type": "string" }
+      }
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": { "type": "object", "properties": { "name": { "type": "string" } }, "additionalProperties": true }
+    },
+    "serviceAccount": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer" },
+        "loadBalancerIP": { "type": "string" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
+        "host": { "type": "string" },
+        "tls": {
+          "type": "object",
+          "properties": { "enabled": { "type": "boolean" }, "secretName": { "type": "string" } },
+          "additionalProperties": true
+        },
+        "paths": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "grpc": {
+              "type": "object",
+              "properties": { "enabled": { "type": "boolean" }, "path": { "type": "string" }, "pathType": { "type": "string" } },
+              "additionalProperties": true
+            },
+            "http": {
+              "type": "object",
+              "properties": { "enabled": { "type": "boolean" }, "path": { "type": "string" }, "pathType": { "type": "string" } },
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    },
+    "probes": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "liveness": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "type": { "type": "string", "enum": ["httpGet", "tcpSocket", "grpc"] },
+            "initialDelaySeconds": { "type": "integer" },
+            "periodSeconds": { "type": "integer" },
+            "timeoutSeconds": { "type": "integer" },
+            "successThreshold": { "type": "integer" },
+            "failureThreshold": { "type": "integer" },
+            "httpGet": { "type": "object", "properties": { "path": { "type": "string" }, "port": { "type": "integer" } }, "additionalProperties": true },
+            "tcpSocket": { "type": "object", "properties": { "port": { "type": "integer" } }, "additionalProperties": true },
+            "grpc": { "type": "object", "properties": { "port": { "type": "integer" }, "service": { "type": "string" } }, "additionalProperties": true }
+          }
+        },
+        "readiness": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "type": { "type": "string", "enum": ["httpGet", "tcpSocket", "grpc"] },
+            "initialDelaySeconds": { "type": "integer" },
+            "periodSeconds": { "type": "integer" },
+            "timeoutSeconds": { "type": "integer" },
+            "successThreshold": { "type": "integer" },
+            "failureThreshold": { "type": "integer" },
+            "httpGet": { "type": "object", "properties": { "path": { "type": "string" }, "port": { "type": "integer" } }, "additionalProperties": true },
+            "tcpSocket": { "type": "object", "properties": { "port": { "type": "integer" } }, "additionalProperties": true },
+            "grpc": { "type": "object", "properties": { "port": { "type": "integer" }, "service": { "type": "string" } }, "additionalProperties": true }
+          }
+        }
+      }
+    },
+    "env": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "variables": { "type": ["object", "null"], "additionalProperties": { "type": "string" } },
+        "secretVariables": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": "string" },
+              "secretKeyRef": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "name": { "type": "string" },
+                  "key": { "type": "string" },
+                  "optional": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "configMapVariables": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": "string" },
+              "configMapKeyRef": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "name": { "type": "string" },
+                  "key": { "type": "string" },
+                  "optional": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "allOf": [
