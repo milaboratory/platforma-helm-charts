@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/milaboratories/platforma-helm-charts/charts/platforma/values.schema.json",
+  "title": "Platforma values schema",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "persistence": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mainRoot": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Enable single PVC for all data" },
+            "createPvc": { "type": "boolean" },
+            "existingClaim": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] },
+            "size": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "mountPath": { "type": "string" }
+          }
+        },
+        "dbDir": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "createPvc": { "type": "boolean" },
+            "existingClaim": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] },
+            "size": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "mountPath": { "type": "string" }
+          }
+        },
+        "workDir": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "createPvc": { "type": "boolean" },
+            "existingClaim": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] },
+            "size": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "mountPath": { "type": "string" }
+          }
+        },
+        "packagesDir": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "createPvc": { "type": "boolean" },
+            "existingClaim": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] },
+            "size": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "mountPath": { "type": "string" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mainRoot": {
+                "properties": { "enabled": { "const": false } }
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              { "properties": { "dbDir": { "properties": { "enabled": { "const": true } }, "required": ["enabled"] } } },
+              { "properties": { "workDir": { "properties": { "enabled": { "const": true } }, "required": ["enabled"] } } },
+              { "properties": { "packagesDir": { "properties": { "enabled": { "const": true } }, "required": ["enabled"] } } }
+            ],
+            "errorMessage": "persistence.mainRoot.enabled is false, but none of dbDir/workDir/packagesDir are enabled"
+          }
+        },
+        {
+          "if": {
+            "properties": { "mainRoot": { "properties": { "enabled": { "const": true } } } }
+          },
+          "then": {}
+        }
+      ]
+    },
+    "googleBatch": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "storage": { "type": "string" },
+        "volumes": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "existingClaim": { "type": "string" },
+            "storageClass": { "type": "string" },
+            "size": { "type": "string" },
+            "accessMode": { "type": "string", "enum": ["ReadWriteOnce", "ReadWriteMany"] }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "enabled": { "const": true } } },
+              "then": {
+                "anyOf": [
+                  { "required": ["existingClaim"] },
+                  { "required": ["storageClass", "size"] }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "persistence": {
+            "properties": {
+              "mainRoot": { "properties": { "enabled": { "const": true } } }
+            }
+          }
+        }
+      },
+      "then": {}
+    }
+  ]
+}
+

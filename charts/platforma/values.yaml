@@ -254,8 +254,6 @@ mainOptions:
 
 # -- Local Storage Options (using PVCs)
 persistence:
-  # -- If true, all persistence options below will be enabled.
-  globalEnabled: true
   # -- Configuration for the main data volume (simple setup).
   # If enabled, this creates a single PVC for all application data.
   # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
@@ -325,6 +323,24 @@ listenOptions:
   selfSignedTlsOrg: ""
   selfSignedTlsDomains: []
   selfSignedTlsIps: []
+
+# -- GCP settings shared across features (GCS, Google Batch, etc.)
+# If provided, this service account email will be used as a fallback in multiple places
+# and the Kubernetes ServiceAccount will be annotated to match Workload Identity.
+gcp:
+  # -- Primary location to configure GCP integration
+  # These are the preferred values. Section-level settings can override only if needed.
+  # NOTE: Not automatically added to Kubernetes ServiceAccount annotations. Add
+  # `iam.gke.io/gcp-service-account` yourself under `serviceAccount.annotations` for Workload Identity.
+  # See README: "Centralized GCP service account (fallback)".
+  # serviceAccount: ""
+  # -- GCP Project ID
+  # Preferred project for:
+  # - primaryStorage.gcs.projectId (overridden only if explicitly set)
+  # - dataLibrary.gcs[*].projectId (overridden only if explicitly set per item)
+  # - googleBatch.project (overridden only if explicitly set)
+  # See README examples for details.
+  # projectId: ""
 
 # -- Primary Storage Options
 # NOTE: Only one primary storage can be enabled at a time (s3, fs, or gcs)
@@ -630,11 +646,11 @@ networkPolicy:
 # -- Resource limits and requests
 resources:
   limits:
-    cpu: 8000m
-    memory: 16Gi
+    cpu: 2000m
+    memory: 4Gi
   requests:
-    cpu: 4000m
-    memory: 8Gi
+    cpu: 1000m
+    memory: 2Gi
 
 # -- Node selector, affinity, and tolerations
 nodeSelector: {}

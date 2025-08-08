@@ -1,0 +1,98 @@
+# Example: GKE (GCS + Workload Identity)
+
+image:
+  repository: quay.io/milaboratories/platforma
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  create: true
+  annotations:
+    iam.gke.io/gcp-service-account: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
+
+service:
+  type: LoadBalancer
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: platforma.example.gke.yourdomain.com
+
+persistence:
+  mainRoot:
+    enabled: false
+  dbDir:
+    enabled: true
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    storageClass: "standard-rwo"
+    mountPath: /data/platforma-data/rocksdb
+  workDir:
+    enabled: false
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 50Gi
+    storageClass: "standard-rwo"
+    mountPath: /data/platforma-data/work
+  packagesDir:
+    enabled: false
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 50Gi
+    storageClass: "standard-rwo"
+    mountPath: /data/platforma-data/packages
+
+gcp:
+  projectId: "my-gcp-project-id"
+  serviceAccount: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
+
+primaryStorage:
+  gcs:
+    enabled: true
+    url: "gs://example-platforma-primary/"
+  s3:
+    enabled: false
+  fs:
+    enabled: false
+
+dataLibrary:
+  gcs:
+    - id: "library"
+      enabled: true
+      url: "gs://example-platforma-corp-library/"
+    - id: "test-assets"
+      enabled: true
+      url: "gs://example-platforma-test-assets/"
+
+monitoring:
+  enabled: true
+  port: 9090
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+
+googleBatch:
+  enabled: true
+  storage: "/data/platforma-data=nfs://10.244.108.130/nfs_share"
+  region: "europe-west3"
+  jobNamePrefix: "pl3"
+  jobImage: ""
+  network: "projects/my-gcp-project-id/global/networks/my-vpc"
+  subnetwork: "projects/my-gcp-project-id/regions/europe-west3/subnetworks/my-subnet"
+  provisioning: "SPOT"
+  volumes:
+    enabled: true
+    name: "nfs-volume"
+    mountPath: "/data/platforma-data"
+    workDirName: "pl3/work"
+    packagesDirName: "pl3/packages"
+    existingClaim: "filestore-fast-pvc"
+    storageClass: ""
+    size: "1Ti"
+    accessMode: "ReadWriteMany"
+
+

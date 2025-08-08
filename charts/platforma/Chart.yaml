@@ -4,6 +4,7 @@ description: A Helm chart for Platforma application
 type: application
 version: 2.0.1
 appVersion: "1.41.1"
+kubeVersion: ">=1.25.0-0"
 sources:
   - https://github.com/milaboratory/platforma-helm-charts/charts/platforma
 home: https://github.com/milaboratory/platforma-helm-charts

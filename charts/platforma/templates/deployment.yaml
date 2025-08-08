@@ -6,6 +6,7 @@ metadata:
     {{- include "platforma.labels" . | nindent 4 }}
 spec:
   {{- include "platforma.validatePrimaryStorage" . | nindent 2 }}
+  {{- include "platforma.validatePersistence" . | nindent 2 }}
 
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -134,14 +135,19 @@ spec:
             {{- else if .Values.primaryStorage.fs.url }}
             - "--primary-storage-fs-url={{ .Values.primaryStorage.fs.url }}"
             {{- end }}
+            {{- if .Values.primaryStorage.fs.pvc.enabled }}
+            - "--primary-storage-fs={{ .Values.primaryStorage.fs.pvc.mountPath }}"
+            {{- end }}
             {{- end }}
             {{- if .Values.primaryStorage.gcs.enabled }}
             - "--primary-storage-gcs={{ .Values.primaryStorage.gcs.url }}"
-            {{- if .Values.primaryStorage.gcs.projectId }}
-            - "--primary-storage-gcs-project-id={{ .Values.primaryStorage.gcs.projectId }}"
+            {{- $gcpProject := .Values.gcp.projectId | default .Values.primaryStorage.gcs.projectId }}
+            {{- if $gcpProject }}
+            - "--primary-storage-gcs-project-id={{ $gcpProject }}"
             {{- end }}
-            {{- if .Values.primaryStorage.gcs.serviceAccount }}
-            - "--primary-storage-gcs-service-account={{ .Values.primaryStorage.gcs.serviceAccount }}"
+            {{- $gcpSa := include "platforma.gcpServiceAccount" . }}
+            {{- if $gcpSa }}
+            - "--primary-storage-gcs-service-account={{ $gcpSa }}"
             {{- end }}
             {{- end }}
             # Data Library Options
@@ -181,11 +187,13 @@ spec:
             {{- range .Values.dataLibrary.gcs }}
             {{- if .enabled }}
             - "--data-library-gcs={{ .id }}={{ .url }}"
-            {{- if .projectId }}
-            - "--data-library-gcs-project-id={{ .id }}={{ .projectId }}"
+            {{- $dlProject := $.Values.gcp.projectId | default .projectId }}
+            {{- if $dlProject }}
+            - "--data-library-gcs-project-id={{ .id }}={{ $dlProject }}"
             {{- end }}
-            {{- if .serviceAccount }}
-            - "--data-library-gcs-service-account={{ .id }}={{ .serviceAccount }}"
+            {{- $dlSa := .serviceAccount | default $.Values.gcp.serviceAccount }}
+            {{- if $dlSa }}
+            - "--data-library-gcs-service-account={{ .id }}={{ $dlSa }}"
             {{- end }}
             {{- if .jsonKeyFilePath }}
             - "--data-library-gcs-json-key-file-path={{ .id }}={{ .jsonKeyFilePath }}"
@@ -195,8 +203,9 @@ spec:
             # Google Batch Options
             {{- if .Values.googleBatch.enabled }}
             - "--google-batch-storage={{ .Values.googleBatch.storage }}"
-            {{- if .Values.googleBatch.project }}
-            - "--google-batch-project={{ .Values.googleBatch.project }}"
+            {{- $gbProject := .Values.gcp.projectId | default .Values.googleBatch.project }}
+            {{- if $gbProject }}
+            - "--google-batch-project={{ $gbProject }}"
             {{- end }}
             {{- if .Values.googleBatch.region }}
             - "--google-batch-region={{ .Values.googleBatch.region }}"
@@ -210,8 +219,9 @@ spec:
             - "--google-batch-network={{ .Values.googleBatch.network }}"
             - "--google-batch-subnetwork={{ .Values.googleBatch.subnetwork }}"
             - "--google-batch-provisioning={{ .Values.googleBatch.provisioning }}"
-            {{- if .Values.googleBatch.serviceAccount }}
-            - "--google-batch-service-account={{ .Values.googleBatch.serviceAccount }}"
+            {{- $gbSa := .Values.googleBatch.serviceAccount | default .Values.gcp.serviceAccount }}
+            {{- if $gbSa }}
+            - "--google-batch-service-account={{ $gbSa }}"
             {{- end }}
             {{- end }}
             # Authentication Options

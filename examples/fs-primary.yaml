@@ -1,0 +1,74 @@
+# Example: Primary storage via filesystem (PVC-backed) based on pl8
+
+image:
+  repository: quay.io/milaboratories/platforma
+  pullPolicy: IfNotPresent
+  tag: ""
+
+serviceAccount:
+  create: true
+
+service:
+  type: ClusterIP
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: h2c
+
+ingress:
+  enabled: true
+  className: "traefik"
+  host: platforma.example.fs.yourdomain.com
+  tls:
+    enabled: true
+    secretName: "wildcar-k8s-demo2-plbio-tls"
+  paths:
+    grpc:
+      enabled: true
+      path: /
+      pathType: Prefix
+    http:
+      enabled: true
+      path: /s3fs
+      pathType: Prefix
+
+persistence:
+  mainRoot:
+    enabled: true
+    createPvc: true
+    accessMode: ReadWriteOnce
+    size: 500Gi
+    mountPath: /data/platforma-data
+
+primaryStorage:
+  fs:
+    enabled: true
+    url: "http://platforma.example.fs.yourdomain.com/s3fs"
+    autoUrl: false
+    httpService:
+      type: ClusterIP
+      annotations:
+        traefik.ingress.kubernetes.io/service.serversscheme: h2c
+    pvc:
+      enabled: true
+      existingClaim: ""
+      accessMode: ReadWriteOnce
+      size: 100Gi
+      storageClass: "local-path"
+      mountPath: /data/primary-storage
+  s3:
+    enabled: false
+  gcs:
+    enabled: false
+
+monitoring:
+  enabled: true
+  port: 9090
+
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+
