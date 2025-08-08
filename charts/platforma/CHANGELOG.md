@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.0.4] - 2025-08-08
+### Miscellaneous Tasks
+
+- Add helm chart logo ([`e80d5ed`](https://github.com/milaboratory/platforma-helm-charts/commit/e80d5edd060d520d973d55c85539e1c43ac24ad7))
+
 ## [v2.0.3] - 2025-08-08
 ### Bug Fixes
 
