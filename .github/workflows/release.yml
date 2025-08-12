@@ -57,6 +57,7 @@ jobs:
       - name: Export legacy pubring for Helm
         run: |
           gpg --export --output ~/.gnupg/pubring.gpg
+          gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}" --output ~/.gnupg/secring.gpg
 
       - name: Update Chart Version
         run: |
@@ -66,7 +67,7 @@ jobs:
         run: |
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} \
             --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring ~/.gnupg/pubring.gpg
+            --keyring ~/.gnupg/secring.gpg
           helm push ${{ steps.get_chart_info.outputs.chart_name }}-${{ steps.get_chart_info.outputs.chart_version }}.tgz oci://ghcr.io/${{ github.repository }}
 
   publish-artifact-hub:
@@ -114,6 +115,7 @@ jobs:
       - name: Export legacy pubring for Helm
         run: |
           gpg --export --output ~/.gnupg/pubring.gpg
+          gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}" --output ~/.gnupg/secring.gpg
 
       - name: Update Chart Version
         run: |
@@ -130,7 +132,7 @@ jobs:
           mkdir -p packages/
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} -d packages/ \
             --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring ~/.gnupg/pubring.gpg
+            --keyring ~/.gnupg/secring.gpg
 
       - name: Update Helm repository index
         run: |
