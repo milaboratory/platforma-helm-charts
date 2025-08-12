@@ -1,4 +1,4 @@
-name: ci-validate-values
+name: Validate Values
 
 on:
   pull_request:
