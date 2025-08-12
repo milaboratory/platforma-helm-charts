@@ -166,6 +166,7 @@ deployment:
     # prometheus.io/scrape: "true"
     # prometheus.io/port: {{ .Values.service.monitoringPort | quote }}
     # prometheus.io/path: "/metrics"
+  redeployOnUpgrade: false
   # -- Deployment strategy ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
   strategy:
     type: Recreate # Or Recreate. RollingUpdate is generally preferred for zero-downtime updates.
