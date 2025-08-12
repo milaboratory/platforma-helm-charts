@@ -1,0 +1,57 @@
+name: ci-validate-values
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.18.4
+
+      - name: Lint base chart (schema validation)
+        run: |
+          helm lint charts/platforma | cat
+
+      - name: Validate example and migration values (schema + render)
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(examples/*.yaml migration/**/*.yaml tmp-values/**/*.yaml)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No extra values files found to validate."
+            exit 0
+          fi
+          failed=0
+          for f in "${files[@]}"; do
+            echo "=== Validating $f ==="
+            # Schema validation (values.schema.json) happens during helm lint
+            if ! helm lint charts/platforma -f "$f" | cat; then
+              echo "Lint failed for $f"
+              failed=1
+            fi
+            # Also render to catch runtime template errors
+            if ! helm template render-check charts/platforma -f "$f" >/dev/null 2>err.txt; then
+              echo "Template render failed for $f"; sed -n '1,200p' err.txt; echo
+              failed=1
+            fi
+          done
+          rm -f err.txt || true
+          if [ $failed -ne 0 ]; then
+            echo "Some validations failed" >&2
+            exit 1
+          fi
+          echo "All values validated successfully."
+
+
