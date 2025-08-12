@@ -54,20 +54,16 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_HELM_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_HELM_PASSPHRASE }}
 
-      - name: Export legacy pubring for Helm
-        run: |
-          gpg --batch --yes -o ~/.gnupg/pubring.gpg --export
-          gpg --batch --yes -o ~/.gnupg/secring.gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}"
-
       - name: Update Chart Version
         run: |
           yq -i '.version = "${{ steps.get_chart_info.outputs.chart_version }}"' charts/${{ steps.get_chart_info.outputs.chart_name }}/Chart.yaml
 
       - name: Package (signed) and push to GitHub Container Registry
+        env:
+          HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
         run: |
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} \
-            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring ~/.gnupg/secring.gpg
+            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}"
           helm push ${{ steps.get_chart_info.outputs.chart_name }}-${{ steps.get_chart_info.outputs.chart_version }}.tgz oci://ghcr.io/${{ github.repository }}
 
   publish-artifact-hub:
@@ -112,11 +108,6 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_HELM_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_HELM_PASSPHRASE }}
 
-      - name: Export legacy pubring for Helm
-        run: |
-          gpg --batch --yes -o ~/.gnupg/pubring.gpg --export
-          gpg --batch --yes -o ~/.gnupg/secring.gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}"
-
       - name: Update Chart Version
         run: |
           yq -i '.version = "${{ steps.get_chart_info.outputs.chart_version }}"' charts/${{ steps.get_chart_info.outputs.chart_name }}/Chart.yaml
@@ -128,11 +119,12 @@ jobs:
           args: --latest --prepend charts/${{ steps.get_chart_info.outputs.chart_name }}/CHANGELOG.md
 
       - name: Package Chart (signed)
+        env:
+          HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
         run: |
           mkdir -p packages/
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} -d packages/ \
-            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring ~/.gnupg/secring.gpg
+            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}"
 
       - name: Update Helm repository index
         run: |
