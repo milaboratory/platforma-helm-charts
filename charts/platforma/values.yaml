@@ -349,7 +349,7 @@ primaryStorage:
   s3:
     enabled: true
     url: "s3://platforma-bucket/platforma-ci-primary/"
-    region: "eu-central-1"
+            region: "eu-central-1"
     key: "" # It's better to use SecretKeyRef for sensitive keys
     secret: "" # It's better to use SecretKeyRef for sensitive secrets
     externalEndpoint: ""
@@ -594,7 +594,7 @@ debug:
 networkPolicy:
   # -- Enable or disable the creation of NetworkPolicy resource.
   # Requires a NetworkPolicy-enabled CNI plugin (e.g., Calico, Cilium, Weave Net).
-  enabled: false
+      enabled: false
   # -- Specify the policy types.
   # This defaults to ["Ingress", "Egress"] but can be overridden.
   policyTypes:
