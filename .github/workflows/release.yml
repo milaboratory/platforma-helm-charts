@@ -56,8 +56,8 @@ jobs:
 
       - name: Export legacy pubring for Helm
         run: |
-          gpg --export --output ~/.gnupg/pubring.gpg
-          gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}" --output ~/.gnupg/secring.gpg
+          gpg --batch --yes -o ~/.gnupg/pubring.gpg --export
+          gpg --batch --yes -o ~/.gnupg/secring.gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}"
 
       - name: Update Chart Version
         run: |
@@ -114,8 +114,8 @@ jobs:
 
       - name: Export legacy pubring for Helm
         run: |
-          gpg --export --output ~/.gnupg/pubring.gpg
-          gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}" --output ~/.gnupg/secring.gpg
+          gpg --batch --yes -o ~/.gnupg/pubring.gpg --export
+          gpg --batch --yes -o ~/.gnupg/secring.gpg --export-secret-keys "${{ steps.import_gpg.outputs.fingerprint }}"
 
       - name: Update Chart Version
         run: |
