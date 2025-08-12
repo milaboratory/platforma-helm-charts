@@ -62,9 +62,11 @@ jobs:
         env:
           HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
         run: |
+          # Use legacy gpg format
+          gpg --export --armor >~/.gnupg/pubring.gpg
+          gpg --export-secret-keys --armor >~/.gnupg/secring.gpg
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} \
             --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring "/home/runner/.gnupg/pubring.kbx"
           helm push ${{ steps.get_chart_info.outputs.chart_name }}-${{ steps.get_chart_info.outputs.chart_version }}.tgz oci://ghcr.io/${{ github.repository }}
 
   publish-artifact-hub:
@@ -123,10 +125,12 @@ jobs:
         env:
           HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
         run: |
+          # Use legacy gpg format
+          gpg --export --armor >~/.gnupg/pubring.gpg
+          gpg --export-secret-keys --armor >~/.gnupg/secring.gpg
           mkdir -p packages/
           helm package charts/${{ steps.get_chart_info.outputs.chart_name }} -d packages/ \
             --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring "/home/runner/.gnupg/pubring.kbx"
 
       - name: Update Helm repository index
         run: |
