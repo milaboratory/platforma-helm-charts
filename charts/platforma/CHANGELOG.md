@@ -1,5 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.0.6] - 2025-08-12
+### Bug Fixes
+
+- Use gpg legacy format ([`5cadeac`](https://github.com/milaboratory/platforma-helm-charts/commit/5cadeaca41e7a90ae2a7da4c9fdac2acdcb115b4))
+- Indentation in values ([`24577b6`](https://github.com/milaboratory/platforma-helm-charts/commit/24577b6215f0ebcf1876e3973d05de77c232d278))
+- Typo ([`f4b016b`](https://github.com/milaboratory/platforma-helm-charts/commit/f4b016bb95f7dae37825524e16ade54a7a462b19))
+- Pass keyring ([`940fff2`](https://github.com/milaboratory/platforma-helm-charts/commit/940fff27f00c22969bc624b611c4d334f86497cf))
+- Simplify the workflow ([`dcab625`](https://github.com/milaboratory/platforma-helm-charts/commit/dcab6259464ce38d89e95d710569b0df4536d4b9))
+- Set correct output ([`32d4cc2`](https://github.com/milaboratory/platforma-helm-charts/commit/32d4cc218ec80c772144ebb10d2f60435581c70c))
+- Use legacy secret keyring for Helm signing ([`717f627`](https://github.com/milaboratory/platforma-helm-charts/commit/717f627a6ce5f2a5a6cf465e008c2bcc62ef545b))
+- Use legacy GPG pubring for Helm signing to resolve OpenPGP error ([`230546d`](https://github.com/milaboratory/platforma-helm-charts/commit/230546d43e41881e3bd8dfc9172b6f578aa9b83a))
+### Documentation
+
+- Add FS primary storage guidance in NOTES.txt ([`b3cc680`](https://github.com/milaboratory/platforma-helm-charts/commit/b3cc6808b9206ac89cf4aa8245dbc3546aba9f82))
+### Miscellaneous Tasks
+
+- Update gpg key ([`246da58`](https://github.com/milaboratory/platforma-helm-charts/commit/246da5871ac06689ea230517f99972ae9438b453))
+
 ## [v2.0.5] - 2025-08-08
 ### Miscellaneous Tasks
 
