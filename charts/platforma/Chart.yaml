@@ -3,7 +3,7 @@ name: platforma
 description: A Helm chart for Platforma application
 type: application
 version: 2.0.5
-appVersion: "1.41.1"
+appVersion: "1.41.2"
 kubeVersion: ">=1.25.0-0"
 icon: "https://raw.githubusercontent.com/milaboratory/platforma-helm-charts/main/charts/platforma/logo.svg"
 sources:
@@ -14,10 +14,13 @@ keywords:
   - platforma
   - kubernetes
 annotations:
+  artifacthub.io/signKey: |
+      fingerprint: 53D1DF64D78A5A2F3655965EB23149A622A6AC55
+      url: https://raw.githubusercontent.com/milaboratory/platforma-helm-charts/main/charts/platforma/KEYS.asc
   artifacthub.io/links: |-
     - name: Sources
       url: https://platforma.bio/downloads/
-    - name: Charts repo
+    - name: Charts repository
       url: https://github.com/milaboratory/platforma-helm-charts
     - name: Docs
       url: https://docs.platforma.bio/
