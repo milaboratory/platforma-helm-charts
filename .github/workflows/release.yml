@@ -47,27 +47,13 @@ jobs:
           echo "chart_name=$chart_name" >> $GITHUB_OUTPUT
           echo "chart_version=$chart_version" >> $GITHUB_OUTPUT
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_HELM_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_HELM_PASSPHRASE }}
-
       - name: Update Chart Version
         run: |
           yq -i '.version = "${{ steps.get_chart_info.outputs.chart_version }}"' charts/${{ steps.get_chart_info.outputs.chart_name }}/Chart.yaml
 
-      - name: Package (signed) and push to GitHub Container Registry
-        env:
-          HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
+      - name: Package and push to GitHub Container Registry
         run: |
-          # Use legacy gpg format
-          #gpg --export --armor >~/.gnupg/pubring.gpg
-          #gpg --export-secret-keys --armor >~/.gnupg/secring.gpg
-          helm package charts/${{ steps.get_chart_info.outputs.chart_name }} \
-            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring /home/runner/.gnupg/pubring.kbx
+          helm package charts/${{ steps.get_chart_info.outputs.chart_name }}
           helm push ${{ steps.get_chart_info.outputs.chart_name }}-${{ steps.get_chart_info.outputs.chart_version }}.tgz oci://ghcr.io/${{ github.repository }}
 
   publish-artifact-hub:
@@ -105,13 +91,6 @@ jobs:
           echo "chart_name=$chart_name" >> $GITHUB_OUTPUT
           echo "chart_version=$chart_version" >> $GITHUB_OUTPUT
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_HELM_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_HELM_PASSPHRASE }}
-
       - name: Update Chart Version
         run: |
           yq -i '.version = "${{ steps.get_chart_info.outputs.chart_version }}"' charts/${{ steps.get_chart_info.outputs.chart_name }}/Chart.yaml
@@ -122,17 +101,10 @@ jobs:
           config: cliff.toml
           args: --latest --prepend charts/${{ steps.get_chart_info.outputs.chart_name }}/CHANGELOG.md
 
-      - name: Package Chart (signed)
-        env:
-          HELM_GPG_PASSPHRASE: ${{ secrets.GPG_HELM_PASSPHRASE }}
+      - name: Package Chart
         run: |
-          # Use legacy gpg format
-          #gpg --export --armor >~/.gnupg/pubring.gpg
-          #gpg --export-secret-keys --armor >~/.gnupg/secring.gpg
           mkdir -p packages/
-          helm package charts/${{ steps.get_chart_info.outputs.chart_name }} -d packages/ \
-            --sign --key "${{ steps.import_gpg.outputs.fingerprint }}" \
-            --keyring /home/runner/.gnupg/pubring.kbx
+          helm package charts/${{ steps.get_chart_info.outputs.chart_name }} -d packages/
 
       - name: Update Helm repository index
         run: |
