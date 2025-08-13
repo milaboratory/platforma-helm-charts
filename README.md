@@ -21,7 +21,12 @@ This is the preferred method for modern Helm versions. It pulls the chart direct
 
 ```sh
 # Replace <version> with the specific chart version you want to install
-helm install my-platforma oci://ghcr.io/milaboratory/platforma-helm-charts/platforma --version <version>
+# Replace <namespace> with the target namespace
+# Provide your custom values file with -f
+helm install my-platforma oci://ghcr.io/milaboratory/platforma-helm-charts/platforma \
+  --version <version> \
+  --namespace <namespace> \
+  -f my-values.yaml
 ```
 
 ### Method 2: Install from Helm Repository
@@ -40,7 +45,12 @@ helm repo update
 helm search repo platforma/platforma --versions
 
 # Install the chart (replace <version> with the desired chart version)
-helm install my-platforma platforma/platforma --version <version>
+# Replace <namespace> with the target namespace
+# Provide your custom values file with -f
+helm install my-platforma platforma/platforma \
+  --version <version> \
+  --namespace <namespace> \
+  -f my-values.yaml
 ```
 
 ## Configuration overview
