@@ -1,0 +1,60 @@
+{{- if .Values.useDocker }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "platforma.fullname" . }}-docker
+  labels:
+    helm.sh/chart: {{ include "platforma.chart" . }}
+    app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "platforma.serviceAccountName" . }}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: docker-daemon
+          image: docker:25.0-dind
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          args:
+            - --host=tcp://0.0.0.0:2375
+            - --host=unix:///var/run/docker.sock
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: dind-sock
+              mountPath: /var/run
+      volumes:
+        - name: dind-sock
+          emptyDir: {}
+{{- end }}
+
+
