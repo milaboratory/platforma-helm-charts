@@ -44,17 +44,28 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
-          args:
-            - --host=tcp://0.0.0.0:2375
-            - --host=unix:///var/run/docker.sock
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          # -- A list of volume mounts for the docker container.
+          # This is automatically populated based on your persistence settings.
           volumeMounts:
-            - name: dind-sock
-              mountPath: /var/run
+            {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
+            - name: {{ .Values.googleBatch.volumes.name }}
+              mountPath: {{ .Values.googleBatch.volumes.mountPath }}
+            {{- end }}
+            {{- include "platforma.sharedVolumeMounts" . | nindent 12 }}
+      # -- Volumes for the pod.
+      # This is automatically populated based on your persistence settings.
       volumes:
-        - name: dind-sock
-          emptyDir: {}
+        {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
+        - name: {{ .Values.googleBatch.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
+        {{- end }}
+        {{- include "platforma.sharedVolumes" . | nindent 8 }}
 {{- end }}
 
 

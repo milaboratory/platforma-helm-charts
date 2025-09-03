@@ -124,9 +124,11 @@ This helper enforces:
 {{- end -}}
 {{- end -}}
 
-# Constructs a list of volumes to be mounted to the main application container.
-# This helper gathers all enabled PVC configurations, determines whether to use an
-# existing claim or a generated one, and creates the corresponding volume definition.
+{{/*
+Constructs a list of volumes to be mounted to the main application container.
+This helper gathers all enabled PVC configurations, determines whether to use an
+existing claim or a generated one, and creates the corresponding volume definition.
+*/}}
 {{- define "platforma.volumes" -}}
 {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
 {{- range $key, $pvc := $allPvcs -}}
@@ -143,9 +145,11 @@ This helper enforces:
 {{- end -}}
 {{- end -}}
 
-# Constructs a list of volume mounts for the main application container.
-# This helper gathers all enabled PVC configurations and creates the corresponding
-# volumeMount definition with the correct name and mount path.
+{{/*
+Constructs a list of volume mounts for the main application container.
+This helper gathers all enabled PVC configurations and creates the corresponding
+volumeMount definition with the correct name and mount path.
+*/}}
 {{- define "platforma.volumeMounts" -}}
 {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
 {{- range $key, $pvc := $allPvcs -}}
@@ -157,6 +161,40 @@ This helper enforces:
 {{- if $attach }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   mountPath: {{ $pvc.mountPath }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Constructs a list of shared volumes that should be mounted into additional pods (i.e. dind pod)
+*/}}
+{{- define "platforma.sharedVolumes" -}}
+{{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+{{- range $key, $pvc := $allPvcs -}}
+{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
+{{- if $attach }}
+{{- if or (eq $key "main-root") (eq $key "work") -}}
+- name: {{ $key | trunc 63 | trimSuffix "-" }}
+  persistentVolumeClaim:
+    claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-") | quote }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Constructs a list of volume mounts for the shared volumes that should be mounted into
+additional pods (i.e. dind pod)
+*/}}
+{{- define "platforma.sharedVolumeMounts" -}}
+{{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+{{- range $key, $pvc := $allPvcs -}}
+{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
+{{- if $attach }}
+{{- if or (eq $key "main-root") (eq $key "work") -}}
+- name: {{ $key | trunc 63 | trimSuffix "-" }}
+  mountPath: {{ $pvc.mountPath }}
+{{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -190,4 +228,19 @@ Generate value for DOCKER_HOST env variable: TCP URL pointing to the docker serv
 */}}
 {{- define "platforma.dockerHost" -}}
 {{- printf "tcp://%s-docker:2375" (include "platforma.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Parse CPU resource value and convert to whole CPUs (minimum 1).
+Handles formats like: "2000m", "2", "0.5", etc.
+Returns an integer representing whole CPUs.
+*/}}
+{{- define "platforma.parseCpuToWholeCpus" -}}
+{{- $cpu := . | toString -}}
+{{- if hasSuffix "m" $cpu -}}
+  {{- $cpu = divf (float64 (trimSuffix "m" $cpu)) 1000.0 -}}
+{{- else -}}
+  {{- $cpu = float64 $cpu -}}
+{{- end -}}
+{{- maxf (ceil $cpu) 1.0 | int -}}
 {{- end -}}
