@@ -279,7 +279,7 @@ spec:
             - "--debug-port={{ .Values.debug.port }}"
             {{- end }}
             {{- if .Values.useDocker }}
-            - "--runner-local-cpu={{ int (.Values.resources.limits.cpu) }}"
+            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" .Values.resources.limits.cpu }}"
             - "--runner-local-ram={{ .Values.resources.limits.memory }}"
             {{- end }}
             # Extra Arguments
@@ -387,11 +387,11 @@ spec:
           resources:
             {{- if .Values.useDocker }}
             limits:
-              cpu: "4"
+              cpu: "2"
               memory: 4Gi
             requests:
-              cpu: "4"
-              memory: 4Gi
+              cpu: "1"
+              memory: 2Gi
             {{- else }}
             {{- toYaml .Values.resources | nindent 12 }}
             {{- end }}
