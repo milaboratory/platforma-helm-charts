@@ -278,6 +278,10 @@ spec:
             - "--debug-ip={{ .Values.listenOptions.ip }}"
             - "--debug-port={{ .Values.debug.port }}"
             {{- end }}
+            {{- if .Values.useDocker }}
+            - "--runner-local-cpu={{ .Values.resources.limits.cpu/100 }}"
+            - "--runner-local-ram={{ .Values.resources.limits.memory }}"
+            {{- end }}
             # Extra Arguments
             {{- range .Values.extraArgs }}
             - {{ . | quote }}
@@ -381,7 +385,16 @@ spec:
           {{- end }}
           {{- end }}
           resources:
+            {{- if .Values.useDocker }}
+            limits:
+              cpu: "4"
+              memory: 4Gi
+            requests:
+              cpu: "4"
+              memory: 4Gi
+            {{- else }}
             {{- toYaml .Values.resources | nindent 12 }}
+            {{- end }}
           # -- A list of volume mounts for the application container.
           # This is automatically populated based on your persistence settings.
           volumeMounts:
