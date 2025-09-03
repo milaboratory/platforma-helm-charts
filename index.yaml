@@ -23,7 +23,7 @@ entries:
     kubeVersion: '>=1.25.0-0'
     name: platforma
     sources:
-    - https://github.com/milaboratory/platforma-helm-charts/charts/platforma
+    - https://github.com/milaboratory/platforma-helm-charts/tree/main/charts/platforma
     type: application
     urls:
     - https://milaboratory.github.io/platforma-helm-charts/packages/platforma-2.0.6.tgz
