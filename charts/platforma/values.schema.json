@@ -9,6 +9,7 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
+        "useDocker": { "type": "boolean" },
         "s3": {
           "type": "object",
           "additionalProperties": true,

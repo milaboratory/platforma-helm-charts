@@ -279,7 +279,7 @@ spec:
             - "--debug-port={{ .Values.debug.port }}"
             {{- end }}
             {{- if .Values.useDocker }}
-            - "--runner-local-cpu={{ .Values.resources.limits.cpu/100 }}"
+            - "--runner-local-cpu={{ int (.Values.resources.limits.cpu) }}"
             - "--runner-local-ram={{ .Values.resources.limits.memory }}"
             {{- end }}
             # Extra Arguments
@@ -312,7 +312,7 @@ spec:
             {{- end }}
             {{- if .Values.useDocker }}
             - name: DOCKER_HOST
-              value: "{{ include \"platforma.dockerHost\" . }}"
+              value: {{ include "platforma.dockerHost" . }}
             - name: PL_RUNNER_ENABLE_DOCKER
               value: "true"
             {{- end }}

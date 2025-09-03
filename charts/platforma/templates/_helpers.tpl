@@ -171,14 +171,6 @@ It will fail the template rendering with an error message if the configuration i
 {{- if .Values.primaryStorage.s3.enabled -}}
   {{- $enabled = append $enabled "s3" -}}
 {{- end -}}
-
-{{/*
-Returns the DOCKER_HOST TCP URL pointing to the docker service.
-*/}}
-{{- define "platforma.dockerHost" -}}
-{{- printf "tcp://%s-docker:2375" (include "platforma.fullname" .) -}}
-{{- end -}}
-
 {{- if .Values.primaryStorage.fs.enabled -}}
   {{- $enabled = append $enabled "fs" -}}
 {{- end -}}
@@ -191,4 +183,11 @@ Returns the DOCKER_HOST TCP URL pointing to the docker service.
 {{- if not $enabled }}
   {{- fail "At least one primary storage must be enabled. Please enable one of: s3, fs, or gcs." -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Generate value for DOCKER_HOST env variable: TCP URL pointing to the docker service.
+*/}}
+{{- define "platforma.dockerHost" -}}
+{{- printf "tcp://%s-docker:2375" (include "platforma.fullname" .) -}}
 {{- end -}}
