@@ -306,6 +306,12 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.useDocker }}
+            - name: DOCKER_HOST
+              value: "{{ include \"platforma.dockerHost\" . }}"
+            - name: PL_RUNNER_ENABLE_DOCKER
+              value: "true"
+            {{- end }}
             {{- range .Values.env.secretVariables }}
             - name: {{ .name }}
               valueFrom:
@@ -458,4 +464,4 @@ spec:
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }} 
+      {{- end }}
