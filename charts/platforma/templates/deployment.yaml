@@ -414,7 +414,7 @@ spec:
               readOnly: true
             {{- end }}
             {{- range .Values.dataLibrary.s3 }}
-            {{- if .secretRef.enabled }}
+            {{- if and .enabled .secretRef.enabled }}
             - name: datalib-s3-{{ .id }}
               mountPath: "/etc/platforma/secrets/datalib-s3/{{ .id }}"
               readOnly: true
@@ -450,7 +450,7 @@ spec:
             secretName: {{ .Values.primaryStorage.s3.secretRef.name }}
         {{- end }}
         {{- range .Values.dataLibrary.s3 }}
-        {{- if .secretRef.enabled }}
+        {{- if and .enabled .secretRef.enabled }}
         - name: datalib-s3-{{ .id }}
           secret:
             secretName: {{ .secretRef.name }}
