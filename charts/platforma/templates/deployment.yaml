@@ -267,7 +267,7 @@ spec:
             - "--log-dst={{ .Values.logging.destination }}"
             {{- if hasPrefix "dir://" .Values.logging.destination }}
             - "--log-rotation-size={{ .Values.logging.rotation.size }}"
-            - "--log-rotation-count={{ .Values.logging.rotation.count }}"
+            - "--log-rotation-backups={{ .Values.logging.rotation.count }}"
             {{- end -}}
             # Monitoring Options
             {{- if .Values.monitoring.enabled }}
