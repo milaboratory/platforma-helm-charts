@@ -31,7 +31,7 @@ spec:
 {{- end -}}
 
 {{- range .Values.dataLibrary.fs -}}
-{{- if and .pvc.enabled (not .pvc.existingClaim) -}}
+{{- if and .persistence.enabled (not .persistence.existingClaim) -}}
 {{- if not $firstPvc }}
 ---
 {{- end }}
@@ -44,12 +44,12 @@ metadata:
     {{- include "platforma.labels" $ | nindent 4 }}
 spec:
   accessModes:
-    - {{ .pvc.accessMode }}
+    - {{ .persistence.accessMode }}
   resources:
     requests:
-      storage: {{ .pvc.size }}
-  {{- if .pvc.storageClass }}
-  storageClassName: {{ .pvc.storageClass }}
-  {{- end }}
+      storage: {{ .persistence.size }}
+  {{- if .persistence.storageClass }}
+  storageClassName: {{ .persistence.storageClass }}
+  {{- end -}}
 {{- end -}}
 {{- end -}}

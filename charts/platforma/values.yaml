@@ -368,7 +368,7 @@ primaryStorage:
       type: ClusterIP
       annotations: {}
     # PVC configuration for filesystem storage
-    pvc:
+    persistence:
       enabled: false
       # -- Use an existing PVC for the filesystem primary storage. If specified, `size` and `storageClass` are ignored.
       existingClaim: ""
@@ -538,11 +538,17 @@ logging:
   #   - "stream://stdout" (default): Logs are sent to the standard output of the container.
   #   - "stream://stderr": Logs are sent to the standard error of the container.
   #   - "dir:///var/log/platforma": Logs are written to files in the specified directory,
-  #     which can be backed by a persistent volume. The path should match `persistence.mountPath`.
+  #      which can be backed by a persistent volume.
+  #   - "file:///var/log/platforma": write logs to single file without automatic rotation.
   destination: "stream://stderr"
 
-  # -- Persistence configuration for directory-based logging (`dir://`).
-  # This is only used if `destination` is set to a `dir://` path.
+  # -- Specifies rotation settings for directory-based logging (`dir://`).
+  rotation:
+    size: 1Gi
+    count: 5
+
+  # -- Persistence configuration for FS-based logging (`dir://` or `file://`).
+  # This is only used if `destination` is set to a `dir://` or `file://`.
   persistence:
     # -- Enable a PersistentVolumeClaim to store log files.
     enabled: false
@@ -551,7 +557,6 @@ logging:
     accessMode: ReadWriteOnce
     size: 5Gi
     # storageClass: "standard"
-    mountPath: "/var/log/platforma"
 
 # -- Monitoring options for Prometheus endpoint
 monitoring:

@@ -82,15 +82,29 @@ Returns the GCP service account to use, preferring explicit fields and falling b
       {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
     {{- end -}}
   {{- end -}}
-  {{- if and (hasPrefix "dir://" .Values.logging.destination) .Values.logging.persistence.enabled -}}
-    {{- $_ := set $allPvcs "logs" .Values.logging.persistence -}}
+
+  {{- if .Values.logging.persistence.enabled -}}
+    {{- $logsPvc := .Values.logging.persistence | deepCopy -}}
+
+    {{- if hasPrefix "dir://" .Values.logging.destination -}}
+      {{- $_ := set $logsPvc "mountPath" (trimPrefix "dir://" .Values.logging.destination) -}}
+      {{- $_ := set $allPvcs "logs" $logsPvc -}}
+    {{- end -}}
+
+    {{- if hasPrefix "file://" .Values.logging.destination -}}
+      {{- $_ := set $logsPvc "mountPath" (trimPrefix "file://" .Values.logging.destination) -}}
+      {{- $_ := set $allPvcs "logs" $logsPvc -}}
+    {{- end -}}
+
   {{- end -}}
-  {{- if and .Values.primaryStorage.fs.enabled .Values.primaryStorage.fs.pvc.enabled -}}
-    {{- $_ := set $allPvcs "primary-storage" .Values.primaryStorage.fs.pvc -}}
+
+  {{- if and .Values.primaryStorage.fs.enabled .Values.primaryStorage.fs.persistence.enabled -}}
+    {{- $_ := set $allPvcs "primary-storage" .Values.primaryStorage.fs.persistence -}}
   {{- end -}}
+
   {{- range .Values.dataLibrary.fs -}}
-    {{- if .pvc.enabled -}}
-      {{- $_ := set $allPvcs .id .pvc -}}
+    {{- if .persistence.enabled -}}
+      {{- $_ := set $allPvcs .id .persistence -}}
     {{- end -}}
   {{- end -}}
   {{- printf "%s" (mustToJson $allPvcs) -}}
