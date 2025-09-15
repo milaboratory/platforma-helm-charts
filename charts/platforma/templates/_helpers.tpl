@@ -87,12 +87,31 @@ Returns the GCP service account to use, preferring explicit fields and falling b
     {{- $logsPvc := .Values.logging.persistence | deepCopy -}}
 
     {{- if hasPrefix "dir://" .Values.logging.destination -}}
-      {{- $_ := set $logsPvc "mountPath" (trimPrefix "dir://" .Values.logging.destination) -}}
+      {{- $dirPath := trimPrefix "dir://" .Values.logging.destination -}}
+
+      {{- if eq $dirPath "/" -}}
+        {{- fail "Logging persistence is enabled, but log dir points to root (/). Disable persistence for logs or specify subdirectory" -}}
+      {{- end -}}
+      {{- if not (hasPrefix "/" $dirPath) -}}
+        {{- fail "Logging persistence is enabled, but log dir is not an absolute path. Disable persistence for logs or specify absolute path" -}}
+      {{- end -}}
+
+      {{- $_ := set $logsPvc "mountPath" $dirPath -}}
       {{- $_ := set $allPvcs "logs" $logsPvc -}}
     {{- end -}}
 
     {{- if hasPrefix "file://" .Values.logging.destination -}}
-      {{- $_ := set $logsPvc "mountPath" (trimPrefix "file://" .Values.logging.destination) -}}
+      {{- $filePath := trimPrefix "file://" .Values.logging.destination -}}
+      {{- $dirPath := dir $filePath -}}
+
+      {{- if eq $dirPath "/" -}}
+        {{- fail "Logging persistence is enabled, but log file points to root (/). Disable persistence for logs or specify subdirectory" -}}
+      {{- end -}}
+      {{- if not (hasPrefix "/" $dirPath) -}}
+        {{- fail "Logging persistence is enabled, but log file is not an absolute path. Disable persistence for logs or specify absolute path" -}}
+      {{- end -}}
+
+      {{- $_ := set $logsPvc "mountPath" $dirPath -}}
       {{- $_ := set $allPvcs "logs" $logsPvc -}}
     {{- end -}}
 
