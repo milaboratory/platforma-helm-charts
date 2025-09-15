@@ -556,6 +556,7 @@ logging:
     enabled: false
     # -- Use an existing PVC for logs. If specified, other PVC settings are ignored.
     existingClaim: ""
+    createPvc: true
     accessMode: ReadWriteOnce
     size: 5Gi
     # storageClass: "standard"
