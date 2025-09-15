@@ -138,8 +138,8 @@ spec:
             {{- else if .Values.primaryStorage.fs.url }}
             - "--primary-storage-fs-url={{ .Values.primaryStorage.fs.url }}"
             {{- end }}
-            {{- if .Values.primaryStorage.fs.pvc.enabled }}
-            - "--primary-storage-fs={{ .Values.primaryStorage.fs.pvc.mountPath }}"
+            {{- if .Values.primaryStorage.fs.persistence.enabled }}
+            - "--primary-storage-fs={{ .Values.primaryStorage.fs.persistence.mountPath }}"
             {{- end }}
             {{- end }}
             {{- if .Values.primaryStorage.gcs.enabled }}
@@ -158,7 +158,7 @@ spec:
             - "--no-host-data-library"
             {{- end }}
             {{- range .Values.dataLibrary.fs }}
-            {{- if .pvc.enabled }}
+            {{- if .persistence.enabled }}
             - "--data-library-fs={{ .id }}={{ .path }}"
             {{- end }}
             {{- end }}
@@ -265,6 +265,10 @@ spec:
             {{- end }}
             # Logging Options
             - "--log-dst={{ .Values.logging.destination }}"
+            {{- if hasPrefix "dir://" .Values.logging.destination }}
+            - "--log-rotation-size={{ .Values.logging.rotation.size }}"
+            - "--log-rotation-count={{ .Values.logging.rotation.count }}"
+            {{- end -}}
             # Monitoring Options
             {{- if .Values.monitoring.enabled }}
             - "--monitoring-ip={{ .Values.listenOptions.ip }}"
@@ -437,35 +441,35 @@ spec:
         - name: {{ .Values.googleBatch.volumes.name }}
           persistentVolumeClaim:
             claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
-        {{- end }}
+        {{- end -}}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
         - name: license-secret
           secret:
             secretName: {{ .Values.mainOptions.licenseFile.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- if .Values.primaryStorage.s3.secretRef.enabled }}
         - name: primary-storage-s3-secret
           secret:
             secretName: {{ .Values.primaryStorage.s3.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- range .Values.dataLibrary.s3 }}
         {{- if and .enabled .secretRef.enabled }}
         - name: datalib-s3-{{ .id }}
           secret:
             secretName: {{ .secretRef.name }}
-        {{- end }}
-        {{- end }}
+        {{- end -}}
+        {{- end -}}
         {{- if .Values.authOptions.htpasswd.secretRef.enabled }}
         - name: htpasswd-secret
           secret:
             secretName: {{ .Values.authOptions.htpasswd.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled .Values.authOptions.ldap.tls.secretRef.enabled }}
         - name: ldap-secret
           secret:
             secretName: {{ .Values.authOptions.ldap.tls.secretRef.name }}
-        {{- end }}
+        {{- end -}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

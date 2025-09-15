@@ -47,7 +47,7 @@ primaryStorage:
       type: ClusterIP
       annotations:
         traefik.ingress.kubernetes.io/service.serversscheme: h2c
-    pvc:
+    persistence:
       enabled: true
       existingClaim: ""
       accessMode: ReadWriteOnce

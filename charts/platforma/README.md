@@ -97,19 +97,16 @@ The key change is the refactoring of the `values.yaml` file for better organizat
 
       dbDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-database"
         mountPath: "/db"
 
       workDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-work"
         mountPath: "/data/work"
 
       packagesDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-softwareloader"
         mountPath: "/storage/controllers/software-loader"
     ```
@@ -167,13 +164,21 @@ Persistence is enabled by default and controlled under `persistence`:
   - `dbDir`: RocksDB state
   - `workDir`: working directory
   - `packagesDir`: software packages
-  For each, either set `existingClaim` or `createPvc: true` (+ `size`, optional `storageClass`).
-- **Logging persistence**: when `logging.destination` is a `dir://` path and `logging.persistence.enabled` is true, the chart mounts a PVC at `logging.persistence.mountPath`.
+  For each you can set `existingClaim` to use existing PersistentVolumeClaim instead of automatic PVC creation for service 
+  Also you can alter `size` and `storageClass`.
+- **Logging persistence**: when `logging.destination` is `dir://` or `file://`, you can persist logs with `logging.persistence.enabled`. Configuration rules are the same as for other persistent volumes.
 - **FS data libraries**: each entry in `dataLibrary.fs` can create or reuse a PVC and is mounted at its `path`.
 
 Tip: set `existingClaim` to reuse an existing volume; otherwise set `createPvc: true` and specify `size` (and `storageClass` if needed).
 
 ---
+
+### Docker
+
+Platforma Backend can use docker images to run software for blocks.
+To enable this mode, use `useDocker: true` in values configuration.
+
+NOTE: for now, 'docker' mode is restrictive, making backend to either require all software be binary (`useDocker: false`) or be dockerized (`useDocker: true`).
 
 ## Securely Passing Files with Secrets
 
@@ -223,10 +228,10 @@ Primary storage is used for long-term storage of analysis results. Only one prim
 - **S3**: To use an S3-compatible object store, configure the `primaryStorage.s3` section. You can provide credentials directly or reference a Kubernetes secret.
 - **GCS**: To use Google Cloud Storage, configure `primaryStorage.gcs`, specifying the bucket URL, project ID, and service account.
 - **FS (Filesystem)**: To use a local filesystem path backed by a PVC, enable `primaryStorage.fs`.
-  - If `primaryStorage.fs.pvc.enabled` is true:
+  - If `primaryStorage.fs.persistence.enabled` is true:
     - Use `existingClaim` to reuse a PVC, OR
     - Provide `storageClass` and `size` to let the chart create a PVC.
-  - The chart will attach the `primary-storage` volume automatically when `primaryStorage.fs.pvc.enabled` is true.
+  - The chart will attach the `primary-storage` volume automatically when `primaryStorage.fs.persistence.enabled` is true.
 
 #### Example GCS Configuration
 
