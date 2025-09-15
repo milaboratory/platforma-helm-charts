@@ -263,8 +263,6 @@ persistence:
   # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
   mainRoot:
     enabled: true
-    # -- If true, a PVC will be created for the main root directory.
-    createPvc: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -275,8 +273,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   dbDir:
     enabled: false
-    # -- If true, a PVC will be created for the database directory.
-    createPvc: true
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -287,8 +283,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   workDir:
     enabled: false
-    # -- If true, a PVC will be created for the working directory.
-    createPvc: true
     # -- Use an existing PVC for the working directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -299,8 +293,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   packagesDir:
     enabled: false
-    # -- If true, a PVC will be created for the packages directory.
-    createPvc: true
     # -- Use an existing PVC for the packages directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -556,7 +548,6 @@ logging:
     enabled: false
     # -- Use an existing PVC for logs. If specified, other PVC settings are ignored.
     existingClaim: ""
-    createPvc: true
     accessMode: ReadWriteOnce
     size: 5Gi
     # storageClass: "standard"
