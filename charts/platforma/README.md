@@ -287,28 +287,6 @@ Data libraries allow you to mount additional datasets into the application. You 
 - **GCS Libraries**: Configure GCS-backed libraries under `dataLibrary.gcs`.
 - **FS Libraries**: Configure filesystem-backed libraries under `dataLibrary.fs`, which will be provisioned using PVCs.
 
-#### Example GCS Data Libraries
-
-```yaml
-gcp:
-  # Centralized service account and project used as fallback for GCS options below
-  serviceAccount: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
-  projectId: "my-gcp-project-id"
-
-dataLibrary:
-  gcs:
-    - id: "library"
-      enabled: true
-      url: "gs://my-gcs-bucket/corp-library/"
-      # projectId omitted; will use gcp.projectId
-      # serviceAccount can be omitted because gcp.serviceAccount is set
-      # serviceAccount: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
-    - id: "test-assets"
-      enabled: true
-      url: "gs://my-gcs-bucket/test-assets/"
-      # projectId omitted; will use gcp.projectId
-```
-
 ### Google Batch Integration
 
 This chart supports integration with Google Batch for offloading job execution. This is useful for large-scale data processing tasks. To enable this, you need a shared filesystem (like NFS) that is accessible by both the Platforma pod and the Google Batch jobs. Google Cloud Filestore is a common choice for this.
@@ -321,4 +299,229 @@ The `googleBatch` section in `values.yaml` controls this integration.
 -   **`storage`**: Specifies the mapping between a local path in the container and the shared NFS volume. The format is `<local-path>=<nfs-uri>`.
 -   **`project`**: Your Google Cloud Project ID.
 -   **`region`**: The GCP region where Batch jobs will run.
--   **`
+-   **`serviceAccount`**: The email of the GCP service account that Google Batch jobs will use. This service account needs appropriate permissions for Batch and storage access.
+-   **`network` / `subnetwork`**: The VPC network and subnetwork for the Batch jobs.
+-   **`volumes`**: Configures the shared NFS volume. Provide EITHER `existingClaim` (reuse an existing PVC) OR `storageClass` + `size` (let the chart create a PVC). Set `accessMode` as needed (default `ReadWriteMany`).
+
+**Example Configuration:**
+
+```yaml
+googleBatch:
+  enabled: true
+  storage: "/data/platforma-data=nfs://10.0.0.2/fileshare"
+  project: "my-gcp-project-id"
+  region: "us-central1"
+  serviceAccount: "batch-executor@my-gcp-project-id.iam.gserviceaccount.com"
+  network: "projects/my-gcp-project-id/global/networks/default"
+  subnetwork: "projects/my-gcp-project-id/regions/us-central1/subnetworks/default"
+  volumes:
+    enabled: true
+    existingClaim: "my-filestore-pvc" # or omit and set storageClass + size for dynamic provisioning
+    accessMode: "ReadWriteMany"
+    # storageClass: "filestore-rwx"
+    # size: "1Ti"
+```
+
+This configuration assumes you have already created a Google Cloud Filestore instance and a corresponding PersistentVolumeClaim (`my-filestore-pvc`) in your Kubernetes cluster.
+
+#### Example S3 Data Library
+
+```yaml
+dataLibrary:
+  s3:
+    - id: "my-s3-library"
+      enabled: true
+      url: "s3://my-s3-bucket/path/to/library/"
+      region: "us-east-1"
+```
+
+---
+
+## Logging Configuration
+
+The chart offers flexible logging options configured via the `logging.destination` parameter in `values.yaml`.
+
+- **Stream-Based Logging (Default)**:
+  - `stream://stdout`: Logs are sent to standard output (recommended for Kubernetes).
+  - `stream://stderr`: Logs are sent to standard error.
+
+- **Directory-Based Logging**:
+  - `dir:///path/to/logs`: Logs are written to files in the specified directory. To persist logs, enable `logging.persistence` in `values.yaml`, which will create a PersistentVolumeClaim (PVC) to store the log files.
+
+#### Example: Persistent Logging to a Directory
+
+```yaml
+logging:
+  destination: "dir:///var/log/platforma"
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "standard"
+```
+
+---
+
+## Production Considerations
+
+When deploying to a production environment, consider the following:
+
+- **Resource Management**: Set realistic CPU and memory `requests` and `limits` in the `resources` section to ensure stable performance. For example:
+  ```yaml
+  resources:
+    # Default (sane for small clusters/testing)
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  ```
+  For production, consider increasing resources as needed, e.g.:
+  ```yaml
+  resources:
+    limits:
+      cpu: 8000m
+      memory: 16Gi
+    requests:
+      cpu: 4000m
+      memory: 8Gi
+  ```
+- **Security**:
+  - Use a dedicated `serviceAccount` and link it to a cloud IAM role for secure access to cloud resources.
+  - Configure the `deployment.securityContext` and `podSecurityContext` to run the application with the least required privileges.
+- **Networking**:
+  - For secure external access, configure the `ingress` with a real TLS certificate.
+  - Use `networkPolicy` to restrict traffic between pods for a more secure network posture.
+- **Ingress specifics**:
+  - The HTTP port and `-http` Service exist only when `primaryStorage.fs.enabled` is true. The Ingress HTTP path is added only in that case. gRPC access is always via the main Service.
+- **Traefik + gRPC (h2c)**:
+  - If you use Traefik, you may need to enable h2c on the Service:
+    ```yaml
+    service:
+      annotations:
+        traefik.ingress.kubernetes.io/service.serversscheme: "h2c"
+    ```
+- **Image pull secrets**:
+  - For private registries, set:
+    ```yaml
+    imagePullSecrets:
+      - name: regcred
+    ```
+- **NetworkPolicy**:
+  - Enable and define ingress/egress rules under `networkPolicy` if your cluster enforces them.
+- **Security defaults**:
+  - The chart defaults to running the container as root (`runAsUser: 0`). Consider hardening via `deployment.securityContext` and `deployment.podSecurityContext` to comply with cluster policies.
+
+### Examples
+
+Ready-to-use example values are provided under the `examples/` directory:
+
+- `examples/hetzner-s3.yaml`
+- `examples/aws-s3.yaml`
+- `examples/gke-gcs.yaml`
+- `examples/fs-primary.yaml`
+
+> Important: Always review and adapt example files before deployment. Replace placeholders (bucket names, domains, storageClass, regions, service account emails, credentials) with values that match your environment and security policies.
+
+### S3 credentials via Secret (example)
+
+```sh
+kubectl create secret generic my-s3-secret \
+  --from-literal=access-key=AKIA... \
+  --from-literal=secret-key=abcd1234...
+```
+
+```yaml
+primaryStorage:
+  s3:
+    enabled: true
+    url: "s3://my-bucket/primary/"
+    region: "eu-central-1"
+    secretRef:
+      enabled: true
+      name: my-s3-secret
+      keyKey: access-key
+      secretKey: secret-key
+```
+- **IAM Integration for AWS EKS and GCP GKE**:
+  When running on managed Kubernetes services like AWS EKS or GCP GKE, it is common practice to associate Kubernetes service accounts with cloud IAM roles for fine-grained access control. You can add the necessary annotations to the `ServiceAccount` created by this chart using the `serviceAccount.annotations` value.
+
+  **AWS EKS Example (IAM Roles for Service Accounts - IRSA):**
+  ```yaml
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/MyPlatformaIAMRole"
+  ```
+
+  **GCP GKE Example (Workload Identity):**
+  ```yaml
+  serviceAccount:
+    create: true
+    annotations:
+      iam.gke.io/gcp-service-account: "my-gcp-sa@my-gcp-project-id.iam.gserviceaccount.com"
+  ```
+
+## Minimal cloud permissions
+
+When running on GKE with GCS/Batch or on EKS with S3, grant at least the following permissions to the cloud identity used by the chart.
+
+### GCP (GKE + GCS + Google Batch)
+
+Assign these roles to the GCP service account mapped via Workload Identity:
+
+- roles/storage.objectAdmin
+- roles/batch.jobsEditor
+- roles/batch.agentReporter
+- roles/iam.serviceAccountTokenCreator
+- roles/artifactregistry.reader
+- roles/logging.logWriter
+
+### AWS (EKS + S3)
+
+Attach an IAM policy similar to the following to the role mapped via IRSA. Substitute placeholders with your own values:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListEntireBucketAndMultipartActions",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "arn:aws:s3:::example-bucket-name"
+    },
+    {
+      "Sid": "FullAccessUserSpecific",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:GetObjectAttributes",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::example-bucket-name/user-demo",
+        "arn:aws:s3:::example-bucket-name/user-demo/*"
+      ]
+    },
+    {
+      "Sid": "GetObjectCommonPrefixes",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectAttributes"
+      ],
+      "Resource": [
+        "arn:aws:s3:::example-bucket-name/corp-library/*",
+        "arn:aws:s3:::example-bucket-name/test-assets/*"
+      ]
+    }
+  ]
+}
+```

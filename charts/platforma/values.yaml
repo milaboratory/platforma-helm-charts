@@ -545,7 +545,7 @@ logging:
   # -- Specifies rotation settings for directory-based logging (`dir://`).
   rotation:
     size: 1Gi
-    count: 5
+    count: 15
 
   # -- Persistence configuration for FS-based logging (`dir://` or `file://`).
   # This is only used if `destination` is set to a `dir://` or `file://`.
