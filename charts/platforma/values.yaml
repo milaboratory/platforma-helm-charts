@@ -16,7 +16,15 @@ imagePullSecrets: []
   # - name: regcred
 
 # -- Enable internal Docker daemon (docker:dind) and share socket + work storage
-useDocker: false
+docker:
+  enabled: false
+  resources:
+    limits:
+      cpu: ""
+      memory: ""
+    requests:
+      cpu: ""
+      memory: ""
 
 # -- Service Account configuration
 serviceAccount:
@@ -324,6 +332,11 @@ listenOptions:
 # If provided, this service account email will be used as a fallback in multiple places
 # and the Kubernetes ServiceAccount will be annotated to match Workload Identity.
 gcp:
+  # -- Google Artifact Registry with block software images (when docker mode is enabled)
+  gar: ""
+  # -- Alternative registry with genome index assets for bio software
+  assets: ""
+
   # -- Primary location to configure GCP integration
   # These are the preferred values. Section-level settings can override only if needed.
   # NOTE: Not automatically added to Kubernetes ServiceAccount annotations. Add
@@ -647,13 +660,25 @@ networkPolicy:
 # -- Resource limits and requests
 resources:
   limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
     cpu: 2000m
     memory: 4Gi
-  requests:
-    cpu: 1000m
-    memory: 2Gi
 
 # -- Node selector, affinity, and tolerations
 nodeSelector: {}
-affinity: {}
+affinity:
+  # -- Pod affinity rules to ensure docker and main service pods are scheduled on the same node
+  # This will be processed by the deployment templates to create proper podAffinity rules
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - platforma-docker
+                - platforma
+        topologyKey: kubernetes.io/hostname
 tolerations: {}

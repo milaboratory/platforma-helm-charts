@@ -176,9 +176,18 @@ Tip: set `existingClaim` to reuse an existing volume; otherwise set `createPvc: 
 ### Docker
 
 Platforma Backend can use docker images to run software for blocks.
-To enable this mode, use `useDocker: true` in values configuration.
+To enable this mode, use `docker.enabled: true` in values configuration.
 
-NOTE: for now, 'docker' mode is restrictive, making backend to either require all software be binary (`useDocker: false`) or be dockerized (`useDocker: true`).
+NOTE: for now, 'docker' mode is restrictive, making backend to either require all software be binary (`enabled: false`) or be dockerized (`enabled: true`).
+
+By default, docker pod gets created with the same resource requests/limits, as main service pod. It is possible to specify alternative resources for docker pod. Only options that are set to non-empty values will override common resource settings.
+```yaml
+docker:
+  enabled: true
+  resources:
+    requests:
+      memory: 256Gi
+```
 
 ## Securely Passing Files with Secrets
 

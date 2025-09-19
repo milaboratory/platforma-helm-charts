@@ -282,9 +282,18 @@ spec:
             - "--debug-ip={{ .Values.listenOptions.ip }}"
             - "--debug-port={{ .Values.debug.port }}"
             {{- end }}
-            {{- if .Values.useDocker }}
-            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" .Values.resources.limits.cpu }}"
-            - "--runner-local-ram={{ .Values.resources.limits.memory }}"
+            {{- if .Values.docker.enabled }}
+            {{- $dockerResources := fromYaml (include "platforma.dockerResources" .) }}
+            - "--runner-enable-docker"
+            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" $dockerResources.limits.cpu }}"
+            - "--runner-local-ram={{ $dockerResources.limits.memory }}"
+              {{- if .Values.gcp.gar }}
+            - "--google-artifact-registry={{ .Values.docker.gar }}"
+            - "--default-docker-registry={{ .Values.docker.gar }}"
+              {{- end -}}
+              {{- if .Values.gcp.assets }}
+            - "--assets-registry-url={{ .Values.gcp.assets }}"
+              {{- end -}}
             {{- end }}
             # Extra Arguments
             {{- range .Values.extraArgs }}
@@ -314,7 +323,7 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
-            {{- if .Values.useDocker }}
+            {{- if .Values.docker.enabled }}
             - name: DOCKER_HOST
               value: {{ include "platforma.dockerHost" . }}
             - name: PL_RUNNER_ENABLE_DOCKER
@@ -389,16 +398,7 @@ spec:
           {{- end }}
           {{- end }}
           resources:
-            {{- if .Values.useDocker }}
-            limits:
-              cpu: "2"
-              memory: 4Gi
-            requests:
-              cpu: "1"
-              memory: 2Gi
-            {{- else }}
             {{- toYaml .Values.resources | nindent 12 }}
-            {{- end }}
           # -- A list of volume mounts for the application container.
           # This is automatically populated based on your persistence settings.
           volumeMounts:
@@ -476,7 +476,18 @@ spec:
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- if .podAffinity }}
+        podAffinity:
+          {{- toYaml .podAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .podAntiAffinity }}
+        podAntiAffinity:
+          {{- toYaml .podAntiAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml .nodeAffinity | nindent 10 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
