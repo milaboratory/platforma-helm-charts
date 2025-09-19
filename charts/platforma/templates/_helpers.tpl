@@ -133,7 +133,7 @@ Returns the GCP service account to use, preferring explicit fields and falling b
 Validate Persistence Configuration
 This helper enforces:
 - If mainRoot.enabled is false, at least one of dbDir/workDir/packagesDir must be enabled
-- For each enabled persistence section (mainRoot, dbDir, workDir, packagesDir), either existingClaim must be set or createPvc: true
+- If persistence section (mainRoot, dbDir, workDir, packagesDir), has non-empty existingClaim, new claim will not be created
 */}}
 {{- define "platforma.validatePersistence" -}}
   {{- if not .Values.googleBatch.enabled -}}
@@ -248,4 +248,27 @@ Returns an integer representing whole CPUs.
     {{- $cpu = float64 $cpu -}}
   {{- end -}}
   {{- maxf (ceil $cpu) 1.0 | int -}}
+{{- end -}}
+
+{{/*
+Docker resource limits and requests.
+Use common resources section, overriding particular values if they are not empty in docker
+*/}}
+{{- define "platforma.dockerResources" -}}
+  {{- $resources := .Values.resources | deepCopy -}}
+
+  {{- if .Values.docker.resources.limits.cpu -}}
+    {{- $_ := set $resources.limits "cpu" .Values.docker.resources.limits.cpu -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.limits.memory -}}
+    {{- $_ := set $resources.limits "memory" .Values.docker.resources.limits.memory -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.requests.cpu -}}
+    {{- $_ := set $resources.requests "cpu" .Values.docker.resources.requests.cpu -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.requests.memory -}}
+    {{- $_ := set $resources.requests "memory" .Values.docker.resources.requests.memory -}}
+  {{- end -}}
+
+  {{- toYaml $resources -}}
 {{- end -}}

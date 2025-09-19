@@ -1,4 +1,4 @@
-{{- if .Values.useDocker }}
+{{- if .Values.docker.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,7 +36,18 @@ spec:
       {{- end }}
       {{- with $.Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- if .podAffinity }}
+        podAffinity:
+          {{- toYaml .podAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .podAntiAffinity }}
+        podAntiAffinity:
+          {{- toYaml .podAntiAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml .nodeAffinity | nindent 10 }}
+        {{- end }}
       {{- end }}
       containers:
         - name: docker-daemon
@@ -48,7 +59,7 @@ spec:
             - name: DOCKER_TLS_CERTDIR
               value: ""
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- include "platforma.dockerResources" . | nindent 12 }}
           # -- A list of volume mounts for the docker container.
           # This is automatically populated based on your persistence settings.
           volumeMounts:
