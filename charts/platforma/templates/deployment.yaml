@@ -326,8 +326,6 @@ spec:
             {{- if .Values.docker.enabled }}
             - name: DOCKER_HOST
               value: {{ include "platforma.dockerHost" . }}
-            - name: PL_RUNNER_ENABLE_DOCKER
-              value: "true"
             {{- end }}
             {{- range .Values.env.secretVariables }}
             - name: {{ .name }}
