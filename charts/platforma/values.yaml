@@ -332,7 +332,7 @@ listenOptions:
 # If provided, this service account email will be used as a fallback in multiple places
 # and the Kubernetes ServiceAccount will be annotated to match Workload Identity.
 gcp:
-  # -- Google Artifact Registry with block software images (when docker mode is enabled)
+  # -- Google Artifact Registry with block software images (to use when docker.enabled is true)
   gar: ""
   # -- Alternative registry with genome index assets for bio software
   assets: ""
