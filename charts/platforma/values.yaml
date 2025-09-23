@@ -15,6 +15,17 @@ image:
 imagePullSecrets: []
   # - name: regcred
 
+# -- Enable internal Docker daemon (docker:dind) and share socket + work storage
+docker:
+  enabled: false
+  resources:
+    limits:
+      cpu: ""
+      memory: ""
+    requests:
+      cpu: ""
+      memory: ""
+
 # -- Service Account configuration
 serviceAccount:
   create: true
@@ -260,8 +271,6 @@ persistence:
   # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
   mainRoot:
     enabled: true
-    # -- If true, a PVC will be created for the main root directory.
-    createPvc: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -272,8 +281,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   dbDir:
     enabled: false
-    # -- If true, a PVC will be created for the database directory.
-    createPvc: true
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -284,8 +291,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   workDir:
     enabled: false
-    # -- If true, a PVC will be created for the working directory.
-    createPvc: true
     # -- Use an existing PVC for the working directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -296,8 +301,6 @@ persistence:
   # Only used if `persistence.mainRoot.enabled` is false.
   packagesDir:
     enabled: false
-    # -- If true, a PVC will be created for the packages directory.
-    createPvc: true
     # -- Use an existing PVC for the packages directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
@@ -329,6 +332,11 @@ listenOptions:
 # If provided, this service account email will be used as a fallback in multiple places
 # and the Kubernetes ServiceAccount will be annotated to match Workload Identity.
 gcp:
+  # -- Google Artifact Registry with block software images (to use when docker.enabled is true)
+  gar: ""
+  # -- Alternative registry with genome index assets for bio software
+  assets: ""
+
   # -- Primary location to configure GCP integration
   # These are the preferred values. Section-level settings can override only if needed.
   # NOTE: Not automatically added to Kubernetes ServiceAccount annotations. Add
@@ -373,7 +381,7 @@ primaryStorage:
       type: ClusterIP
       annotations: {}
     # PVC configuration for filesystem storage
-    pvc:
+    persistence:
       enabled: false
       # -- Use an existing PVC for the filesystem primary storage. If specified, `size` and `storageClass` are ignored.
       existingClaim: ""
@@ -543,11 +551,17 @@ logging:
   #   - "stream://stdout" (default): Logs are sent to the standard output of the container.
   #   - "stream://stderr": Logs are sent to the standard error of the container.
   #   - "dir:///var/log/platforma": Logs are written to files in the specified directory,
-  #     which can be backed by a persistent volume. The path should match `persistence.mountPath`.
-  destination: "stream://stdout"
+  #      which can be backed by a persistent volume.
+  #   - "file:///var/log/platforma": write logs to single file without automatic rotation.
+  destination: "stream://stderr"
 
-  # -- Persistence configuration for directory-based logging (`dir://`).
-  # This is only used if `destination` is set to a `dir://` path.
+  # -- Specifies rotation settings for directory-based logging (`dir://`).
+  rotation:
+    size: 1Gi
+    count: 15
+
+  # -- Persistence configuration for FS-based logging (`dir://` or `file://`).
+  # This is only used if `destination` is set to a `dir://` or `file://`.
   persistence:
     # -- Enable a PersistentVolumeClaim to store log files.
     enabled: false
@@ -556,7 +570,6 @@ logging:
     accessMode: ReadWriteOnce
     size: 5Gi
     # storageClass: "standard"
-    mountPath: "/var/log/platforma"
 
 # -- Monitoring options for Prometheus endpoint
 monitoring:
@@ -647,13 +660,25 @@ networkPolicy:
 # -- Resource limits and requests
 resources:
   limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
     cpu: 2000m
     memory: 4Gi
-  requests:
-    cpu: 1000m
-    memory: 2Gi
 
 # -- Node selector, affinity, and tolerations
 nodeSelector: {}
-affinity: {}
+affinity:
+  # -- Pod affinity rules to ensure docker and main service pods are scheduled on the same node
+  # This will be processed by the deployment templates to create proper podAffinity rules
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - platforma-docker
+                - platforma
+        topologyKey: kubernetes.io/hostname
 tolerations: {}

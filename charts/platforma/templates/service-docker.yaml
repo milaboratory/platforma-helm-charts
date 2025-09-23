@@ -1,0 +1,20 @@
+{{- if .Values.docker.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "platforma.fullname" . }}-docker
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 2375
+      targetPort: 2375
+      protocol: TCP
+      name: docker
+  selector:
+    app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+

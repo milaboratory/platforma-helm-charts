@@ -56,7 +56,7 @@ Filesystem primary storage is enabled.
 
 1. Verify the PVC backing the FS storage:
    ```sh
-   export FS_PVC={{ ( .Values.primaryStorage.fs.pvc.existingClaim | default (printf "%s-primary-storage" (include "platforma.fullname" .)) ) }}
+   export FS_PVC={{ ( .Values.primaryStorage.fs.persistence.existingClaim | default (printf "%s-primary-storage" (include "platforma.fullname" .)) ) }}
    kubectl get pvc $FS_PVC -o wide
    ```
 

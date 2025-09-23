@@ -6,11 +6,7 @@ It supports creating multiple PVCs based on the configuration in values.yaml.
 {{- $firstPvc := true -}}
 
 {{- range $key, $pvc := $allPvcs -}}
-{{- $shouldCreate := and (not $pvc.existingClaim) $pvc.createPvc -}}
-{{- if and (eq $key "primary-storage") (not $pvc.existingClaim) (not $shouldCreate) $pvc.storageClass -}}
-  {{- /* For primary storage FS PVC, allow implicit creation when storageClass is set */ -}}
-  {{- $shouldCreate = true -}}
-{{- end -}}
+{{- $shouldCreate := not $pvc.existingClaim -}}
 {{- if $shouldCreate -}}
 {{- if not $firstPvc }}
 ---
@@ -35,7 +31,7 @@ spec:
 {{- end -}}
 
 {{- range .Values.dataLibrary.fs -}}
-{{- if and .pvc.enabled (not .pvc.existingClaim) -}}
+{{- if and .persistence.enabled (not .persistence.existingClaim) -}}
 {{- if not $firstPvc }}
 ---
 {{- end }}
@@ -48,12 +44,12 @@ metadata:
     {{- include "platforma.labels" $ | nindent 4 }}
 spec:
   accessModes:
-    - {{ .pvc.accessMode }}
+    - {{ .persistence.accessMode }}
   resources:
     requests:
-      storage: {{ .pvc.size }}
-  {{- if .pvc.storageClass }}
-  storageClassName: {{ .pvc.storageClass }}
-  {{- end }}
+      storage: {{ .persistence.size }}
+  {{- if .persistence.storageClass }}
+  storageClassName: {{ .persistence.storageClass }}
+  {{- end -}}
 {{- end -}}
 {{- end -}}

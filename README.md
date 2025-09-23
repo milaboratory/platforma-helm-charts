@@ -66,6 +66,8 @@ helm install my-platforma platforma/platforma \
 - **authOptions**: htpasswd or LDAP (+ TLS via paths or secretRef).
 - **googleBatch**: CLI args and optional shared NFS PVC for offloaded jobs.
 - **monitoring/debug**: Optional Services and ports.
+ - **gcp.serviceAccount**: Optional centralized GCP service account email used as a fallback for GCS and Google Batch CLI options.
+ - **gcp.projectId**: Optional centralized GCP Project ID used as a fallback for GCS and Google Batch CLI options.
 
 ## Migrating from 1.x to 2.0.0
 
@@ -95,19 +97,16 @@ The key change is the refactoring of the `values.yaml` file for better organizat
 
       dbDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-database"
         mountPath: "/db"
 
       workDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-work"
         mountPath: "/data/work"
 
       packagesDir:
         enabled: true
-        createPvc: false # Important: Set to false to use existing PVC
         existingClaim: "<release-name>-platforma-softwareloader"
         mountPath: "/storage/controllers/software-loader"
     ```
@@ -165,13 +164,30 @@ Persistence is enabled by default and controlled under `persistence`:
   - `dbDir`: RocksDB state
   - `workDir`: working directory
   - `packagesDir`: software packages
-  For each, either set `existingClaim` or `createPvc: true` (+ `size`, optional `storageClass`).
-- **Logging persistence**: when `logging.destination` is a `dir://` path and `logging.persistence.enabled` is true, the chart mounts a PVC at `logging.persistence.mountPath`.
+  For each you can set `existingClaim` to use existing PersistentVolumeClaim instead of automatic PVC creation for service 
+  Also you can alter `size` and `storageClass`.
+- **Logging persistence**: when `logging.destination` is `dir://` or `file://`, you can persist logs with `logging.persistence.enabled`. Configuration rules are the same as for other persistent volumes.
 - **FS data libraries**: each entry in `dataLibrary.fs` can create or reuse a PVC and is mounted at its `path`.
 
 Tip: set `existingClaim` to reuse an existing volume; otherwise set `createPvc: true` and specify `size` (and `storageClass` if needed).
 
 ---
+
+### Docker
+
+Platforma Backend can use docker images to run software for blocks.
+To enable this mode, use `docker.enabled: true` in values configuration.
+
+NOTE: for now, 'docker' mode is restrictive, making backend to either require all software be binary (`enabled: false`) or be dockerized (`enabled: true`).
+
+By default, docker pod gets created with the same resource requests/limits, as main service pod. It is possible to specify alternative resources for docker pod. Only options that are set to non-empty values will override common resource settings.
+```yaml
+docker:
+  enabled: true
+  resources:
+    requests:
+      memory: 256Gi
+```
 
 ## Securely Passing Files with Secrets
 
@@ -221,16 +237,51 @@ Primary storage is used for long-term storage of analysis results. Only one prim
 - **S3**: To use an S3-compatible object store, configure the `primaryStorage.s3` section. You can provide credentials directly or reference a Kubernetes secret.
 - **GCS**: To use Google Cloud Storage, configure `primaryStorage.gcs`, specifying the bucket URL, project ID, and service account.
 - **FS (Filesystem)**: To use a local filesystem path backed by a PVC, enable `primaryStorage.fs`.
+  - If `primaryStorage.fs.persistence.enabled` is true:
+    - Use `existingClaim` to reuse a PVC, OR
+    - Provide `storageClass` and `size` to let the chart create a PVC.
+  - The chart will attach the `primary-storage` volume automatically when `primaryStorage.fs.persistence.enabled` is true.
 
 #### Example GCS Configuration
 
 ```yaml
+gcp:
+  projectId: "my-gcp-project-id" # optional centralized project
+
 primaryStorage:
   gcs:
     enabled: true
     url: "gs://my-gcs-bucket/primary-storage/"
-    projectId: "my-gcp-project-id"
-    serviceAccount: "my-gcs-service-account@my-gcp-project-id.iam.gserviceaccount.com"
+    # projectId can be omitted; will use gcp.projectId when set
+    # Optional if you set top-level gcp.serviceAccount (see below)
+    # serviceAccount: "my-gcs-service-account@my-gcp-project-id.iam.gserviceaccount.com"
+```
+
+#### Example: Hetzner (S3-compatible) credentials
+
+For S3-compatible endpoints (e.g., Hetzner), set AWS-style env variables and a Secret for access/secret:
+
+```sh
+kubectl create secret generic hetzner-s3-credentials \
+  --from-literal=access-key=ACCESS_KEY \
+  --from-literal=secret-key=SECRET_KEY
+```
+
+In values:
+
+```yaml
+env:
+  variables:
+    AWS_REGION: eu-central-1
+  secretVariables:
+    - name: AWS_ACCESS_KEY_ID
+      secretKeyRef:
+        name: hetzner-s3-credentials
+        key: access-key
+    - name: AWS_SECRET_ACCESS_KEY
+      secretKeyRef:
+        name: hetzner-s3-credentials
+        key: secret-key
 ```
 
 #### Primary Storage validation (important)
