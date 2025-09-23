@@ -125,6 +125,40 @@ test_docker_enabled() {
       report_fail "$test_name" "'DOCKER_HOST' env variable is not set" "${_manifest}"
 }
 
+test_docker_gar() {
+    local test_name="GAR docker mirror"
+
+    local _manifest
+    _manifest=$(
+        render "tests/rendering-values-docker.yaml" \
+            --show-only templates/deployment.yaml \
+            --set gcp.gar="europe-west3-docker.pkg.dev/my-awesome-project/pl-containers"
+    )
+
+    check_arg "$_manifest" "--google-artifact-registry=europe-west3-docker.pkg.dev/my-awesome-project/pl-containers" &&
+      report_ok "$test_name" "docker GAR authorization is configured" ||
+      report_fail "$test_name" "docker GAR authorization is not configured" "${_manifest}"
+
+    check_arg "$_manifest" "--default-docker-registry=europe-west3-docker.pkg.dev/my-awesome-project/pl-containers" &&
+      report_ok "$test_name" "docker registry mirror is configured" ||
+      report_fail "$test_name" "docker registry mirror is not configured" "${_manifest}"
+}
+
+test_gcp_assets() {
+    local test_name="Assets mirror for Google Cloud"
+
+    local _manifest
+    _manifest=$(
+        render "tests/rendering-values-docker.yaml" \
+            --show-only templates/deployment.yaml \
+            --set gcp.assets="https://alternative-assets-url/"
+    )
+
+    check_arg "$_manifest" "--assets-registry-url=https://alternative-assets-url/" &&
+      report_ok "$test_name" "assets registry mirror is configured" ||
+      report_fail "$test_name" "assets registry mirror is not configured" "${_manifest}"
+}
+
 # Test case: Docker disabled
 test_docker_disabled() {
     local test_name="Docker Disabled"
@@ -147,6 +181,8 @@ test_docker_disabled() {
 #
 test_docker_enabled
 test_docker_disabled
+test_docker_gar
+test_gcp_assets
 
 # Summary
 echo ""
