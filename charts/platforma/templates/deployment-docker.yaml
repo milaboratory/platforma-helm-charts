@@ -1,0 +1,82 @@
+{{- if .Values.docker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "platforma.fullname" . }}-docker
+  labels:
+    helm.sh/chart: {{ include "platforma.chart" . }}
+    app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "platforma.name" . }}-docker
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "platforma.serviceAccountName" . }}
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- if .podAffinity }}
+        podAffinity:
+          {{- toYaml .podAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .podAntiAffinity }}
+        podAntiAffinity:
+          {{- toYaml .podAntiAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml .nodeAffinity | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: docker-daemon
+          image: docker:25.0-dind
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          resources:
+            {{- include "platforma.dockerResources" . | nindent 12 }}
+          # -- A list of volume mounts for the docker container.
+          # This is automatically populated based on your persistence settings.
+          volumeMounts:
+            {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
+            - name: {{ .Values.googleBatch.volumes.name }}
+              mountPath: {{ .Values.googleBatch.volumes.mountPath }}
+            {{- end }}
+            {{- include "platforma.sharedVolumeMounts" . | nindent 12 }}
+      # -- Volumes for the pod.
+      # This is automatically populated based on your persistence settings.
+      volumes:
+        {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
+        - name: {{ .Values.googleBatch.volumes.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
+        {{- end }}
+        {{- include "platforma.sharedVolumes" . | nindent 8 }}
+{{- end }}
+
+

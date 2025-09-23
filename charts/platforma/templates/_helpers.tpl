@@ -7,16 +7,16 @@
 # We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 # If release name contains chart name it will be used as a full name.
 {{- define "platforma.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+  {{- if .Values.fullnameOverride -}}
+    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- $name := default .Chart.Name .Values.nameOverride -}}
+    {{- if contains $name .Release.Name -}}
+      {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+    {{- else -}}
+      {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 # Create chart name and version as used by the chart label.
@@ -42,11 +42,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 # Create the name of the service account to use
 {{- define "platforma.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create -}}
-{{- default (include "platforma.fullname" .) .Values.serviceAccount.name }}
-{{- else -}}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end -}}
+  {{- if .Values.serviceAccount.create -}}
+    {{- default (include "platforma.fullname" .) .Values.serviceAccount.name }}
+  {{- else -}}
+    {{- default "default" .Values.serviceAccount.name }}
+  {{- end -}}
 {{- end -}}
 
 {{/*
@@ -68,97 +68,140 @@ Returns the GCP service account to use, preferring explicit fields and falling b
 
 # Gathers all *enabled* PVC configurations.
 {{- define "platforma.allPvcs" -}}
-{{- $allPvcs := dict -}}
-{{- if and .Values.persistence.mainRoot.enabled (not .Values.googleBatch.enabled) -}}
-  {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
-{{- else -}}
-  {{- if .Values.persistence.dbDir.enabled -}}
-    {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
+  {{- $allPvcs := dict -}}
+  {{- if and .Values.persistence.mainRoot.enabled (not .Values.googleBatch.enabled) -}}
+    {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
+  {{- else -}}
+    {{- if .Values.persistence.dbDir.enabled -}}
+      {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
+    {{- end -}}
+    {{- if and .Values.persistence.workDir.enabled (not .Values.googleBatch.enabled) -}}
+      {{- $_ := set $allPvcs "work" .Values.persistence.workDir -}}
+    {{- end -}}
+    {{- if and .Values.persistence.packagesDir.enabled (not .Values.googleBatch.enabled) -}}
+      {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
+    {{- end -}}
   {{- end -}}
-  {{- if and .Values.persistence.workDir.enabled (not .Values.googleBatch.enabled) -}}
-    {{- $_ := set $allPvcs "work" .Values.persistence.workDir -}}
+
+  {{- if .Values.logging.persistence.enabled -}}
+    {{- $logsPvc := .Values.logging.persistence | deepCopy -}}
+
+    {{- if hasPrefix "dir://" .Values.logging.destination -}}
+      {{- $dirPath := trimPrefix "dir://" .Values.logging.destination -}}
+
+      {{- if eq $dirPath "/" -}}
+        {{- fail "Logging persistence is enabled, but log dir points to root (/). Disable persistence for logs or specify subdirectory" -}}
+      {{- end -}}
+      {{- if not (hasPrefix "/" $dirPath) -}}
+        {{- fail "Logging persistence is enabled, but log dir is not an absolute path. Disable persistence for logs or specify absolute path" -}}
+      {{- end -}}
+
+      {{- $_ := set $logsPvc "mountPath" $dirPath -}}
+      {{- $_ := set $allPvcs "logs" $logsPvc -}}
+    {{- end -}}
+
+    {{- if hasPrefix "file://" .Values.logging.destination -}}
+      {{- $filePath := trimPrefix "file://" .Values.logging.destination -}}
+      {{- $dirPath := dir $filePath -}}
+
+      {{- if eq $dirPath "/" -}}
+        {{- fail "Logging persistence is enabled, but log file points to root (/). Disable persistence for logs or specify subdirectory" -}}
+      {{- end -}}
+      {{- if not (hasPrefix "/" $dirPath) -}}
+        {{- fail "Logging persistence is enabled, but log file is not an absolute path. Disable persistence for logs or specify absolute path" -}}
+      {{- end -}}
+
+      {{- $_ := set $logsPvc "mountPath" $dirPath -}}
+      {{- $_ := set $allPvcs "logs" $logsPvc -}}
+    {{- end -}}
+
   {{- end -}}
-  {{- if and .Values.persistence.packagesDir.enabled (not .Values.googleBatch.enabled) -}}
-    {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
+
+  {{- if and .Values.primaryStorage.fs.enabled .Values.primaryStorage.fs.persistence.enabled -}}
+    {{- $_ := set $allPvcs "primary-storage" .Values.primaryStorage.fs.persistence -}}
   {{- end -}}
-{{- end -}}
-{{- if and (hasPrefix "dir://" .Values.logging.destination) .Values.logging.persistence.enabled -}}
-  {{- $_ := set $allPvcs "logs" .Values.logging.persistence -}}
-{{- end -}}
-{{- if and .Values.primaryStorage.fs.enabled .Values.primaryStorage.fs.pvc.enabled -}}
-  {{- $_ := set $allPvcs "primary-storage" .Values.primaryStorage.fs.pvc -}}
-{{- end -}}
-{{- range .Values.dataLibrary.fs -}}
-  {{- if .pvc.enabled -}}
-    {{- $_ := set $allPvcs .id .pvc -}}
+
+  {{- range .Values.dataLibrary.fs -}}
+    {{- if .persistence.enabled -}}
+      {{- $_ := set $allPvcs .id .persistence -}}
+    {{- end -}}
   {{- end -}}
-{{- end -}}
-{{- printf "%s" (mustToJson $allPvcs) -}}
+  {{- printf "%s" (mustToJson $allPvcs) -}}
 {{- end -}}
 
 {{/*
 Validate Persistence Configuration
 This helper enforces:
 - If mainRoot.enabled is false, at least one of dbDir/workDir/packagesDir must be enabled
-- For each enabled persistence section (mainRoot, dbDir, workDir, packagesDir), either existingClaim must be set or createPvc: true
+- If persistence section (mainRoot, dbDir, workDir, packagesDir), has non-empty existingClaim, new claim will not be created
 */}}
 {{- define "platforma.validatePersistence" -}}
-{{- if not .Values.googleBatch.enabled -}}
-  {{- $p := .Values.persistence -}}
-  {{- if not $p.mainRoot.enabled -}}
-    {{- $db := $p.dbDir.enabled | default false -}}
-    {{- $work := $p.workDir.enabled | default false -}}
-    {{- $pkg := $p.packagesDir.enabled | default false -}}
-    {{- if not (or $db $work $pkg) -}}
-      {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
-    {{- end -}}
-  {{- end -}}
-  {{- $sections := dict "mainRoot" $p.mainRoot "dbDir" $p.dbDir "workDir" $p.workDir "packagesDir" $p.packagesDir -}}
-  {{- range $name, $cfg := $sections -}}
-    {{- if and $cfg $cfg.enabled -}}
-      {{- if and (not $cfg.existingClaim) (not $cfg.createPvc) -}}
-        {{- fail (printf "Persistence misconfiguration: persistence.%s.enabled is true, but neither existingClaim nor createPvc is set." $name) -}}
+  {{- if not .Values.googleBatch.enabled -}}
+    {{- $p := .Values.persistence -}}
+    {{- if not $p.mainRoot.enabled -}}
+      {{- $db := $p.dbDir.enabled | default false -}}
+      {{- $work := $p.workDir.enabled | default false -}}
+      {{- $pkg := $p.packagesDir.enabled | default false -}}
+      {{- if not (or $db $work $pkg) -}}
+        {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- end -}}
 
-# Constructs a list of volumes to be mounted to the main application container.
-# This helper gathers all enabled PVC configurations, determines whether to use an
-# existing claim or a generated one, and creates the corresponding volume definition.
+{{/*
+Constructs a list of volumes to be mounted to the main application container.
+This helper gathers all enabled PVC configurations, determines whether to use an
+existing claim or a generated one, and creates the corresponding volume definition.
+*/}}
 {{- define "platforma.volumes" -}}
-{{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
-{{- range $key, $pvc := $allPvcs -}}
-{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
-{{- if and (not $attach) (eq $key "primary-storage") -}}
-  {{- /* For primary storage FS, attach volume if pvc.enabled is true */ -}}
-  {{- $attach = and $.Values.primaryStorage.fs.enabled $.Values.primaryStorage.fs.pvc.enabled -}}
-{{- end -}}
-{{- if $attach }}
+  {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+  {{- range $key, $pvc := $allPvcs }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   persistentVolumeClaim:
     claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-") | quote }}
-{{- end -}}
-{{- end -}}
+  {{- end -}}
 {{- end -}}
 
-# Constructs a list of volume mounts for the main application container.
-# This helper gathers all enabled PVC configurations and creates the corresponding
-# volumeMount definition with the correct name and mount path.
+{{/*
+Constructs a list of volume mounts for the main application container.
+This helper gathers all enabled PVC configurations and creates the corresponding
+volumeMount definition with the correct name and mount path.
+*/}}
 {{- define "platforma.volumeMounts" -}}
-{{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
-{{- range $key, $pvc := $allPvcs -}}
-{{- $attach := or $pvc.existingClaim $pvc.createPvc -}}
-{{- if and (not $attach) (eq $key "primary-storage") -}}
-  {{- /* For primary storage FS, attach volume if pvc.enabled is true */ -}}
-  {{- $attach = and $.Values.primaryStorage.fs.enabled $.Values.primaryStorage.fs.pvc.enabled -}}
-{{- end -}}
-{{- if $attach }}
+  {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+  {{- range $key, $pvc := $allPvcs }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   mountPath: {{ $pvc.mountPath }}
+  {{- end -}}
 {{- end -}}
+
+{{/*
+Constructs a list of shared volumes that should be mounted into additional pods (i.e. Docker-in-Docker pod)
+*/}}
+{{- define "platforma.sharedVolumes" -}}
+  {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+  {{- range $key, $pvc := $allPvcs }}
+    {{- if or (eq $key "main-root") (eq $key "work") }}
+- name: {{ $key | trunc 63 | trimSuffix "-" }}
+  persistentVolumeClaim:
+    claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-") | quote }}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
+
+{{/*
+Constructs a list of volume mounts for the shared volumes that should be mounted into
+additional pods (i.e. Docker-in-Docker pod)
+*/}}
+{{- define "platforma.sharedVolumeMounts" -}}
+  {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
+  {{- range $key, $pvc := $allPvcs -}}
+    {{- if or (eq $key "main-root") (eq $key "work") }}
+- name: {{ $key | trunc 63 | trimSuffix "-" }}
+  mountPath: {{ $pvc.mountPath }}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{/*
@@ -183,4 +226,49 @@ It will fail the template rendering with an error message if the configuration i
 {{- if not $enabled }}
   {{- fail "At least one primary storage must be enabled. Please enable one of: s3, fs, or gcs." -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Generate value for DOCKER_HOST env variable: TCP URL pointing to the docker service.
+*/}}
+{{- define "platforma.dockerHost" -}}
+  {{- printf "tcp://%s-docker:2375" (include "platforma.fullname" .) -}}
+{{- end -}}
+
+{{/*
+Parse CPU resource value and convert to whole CPUs (minimum 1).
+Handles formats like: "2000m", "2", "0.5", etc.
+Returns an integer representing whole CPUs.
+*/}}
+{{- define "platforma.parseCpuToWholeCpus" -}}
+  {{- $cpu := . | toString -}}
+  {{- if hasSuffix "m" $cpu -}}
+    {{- $cpu = divf (float64 (trimSuffix "m" $cpu)) 1000.0 -}}
+  {{- else -}}
+    {{- $cpu = float64 $cpu -}}
+  {{- end -}}
+  {{- maxf (ceil $cpu) 1.0 | int -}}
+{{- end -}}
+
+{{/*
+Docker resource limits and requests.
+Use common resources section, overriding particular values if they are not empty in docker
+*/}}
+{{- define "platforma.dockerResources" -}}
+  {{- $resources := .Values.resources | deepCopy -}}
+
+  {{- if .Values.docker.resources.limits.cpu -}}
+    {{- $_ := set $resources.limits "cpu" .Values.docker.resources.limits.cpu -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.limits.memory -}}
+    {{- $_ := set $resources.limits "memory" .Values.docker.resources.limits.memory -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.requests.cpu -}}
+    {{- $_ := set $resources.requests "cpu" .Values.docker.resources.requests.cpu -}}
+  {{- end -}}
+  {{- if .Values.docker.resources.requests.memory -}}
+    {{- $_ := set $resources.requests "memory" .Values.docker.resources.requests.memory -}}
+  {{- end -}}
+
+  {{- toYaml $resources -}}
 {{- end -}}

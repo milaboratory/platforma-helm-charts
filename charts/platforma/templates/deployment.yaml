@@ -138,8 +138,8 @@ spec:
             {{- else if .Values.primaryStorage.fs.url }}
             - "--primary-storage-fs-url={{ .Values.primaryStorage.fs.url }}"
             {{- end }}
-            {{- if .Values.primaryStorage.fs.pvc.enabled }}
-            - "--primary-storage-fs={{ .Values.primaryStorage.fs.pvc.mountPath }}"
+            {{- if .Values.primaryStorage.fs.persistence.enabled }}
+            - "--primary-storage-fs={{ .Values.primaryStorage.fs.persistence.mountPath }}"
             {{- end }}
             {{- end }}
             {{- if .Values.primaryStorage.gcs.enabled }}
@@ -158,7 +158,7 @@ spec:
             - "--no-host-data-library"
             {{- end }}
             {{- range .Values.dataLibrary.fs }}
-            {{- if .pvc.enabled }}
+            {{- if .persistence.enabled }}
             - "--data-library-fs={{ .id }}={{ .path }}"
             {{- end }}
             {{- end }}
@@ -265,6 +265,10 @@ spec:
             {{- end }}
             # Logging Options
             - "--log-dst={{ .Values.logging.destination }}"
+            {{- if hasPrefix "dir://" .Values.logging.destination }}
+            - "--log-rotation-size={{ .Values.logging.rotation.size }}"
+            - "--log-rotation-backups={{ .Values.logging.rotation.count }}"
+            {{- end -}}
             # Monitoring Options
             {{- if .Values.monitoring.enabled }}
             - "--monitoring-ip={{ .Values.listenOptions.ip }}"
@@ -277,6 +281,19 @@ spec:
             - "--debug-enabled"
             - "--debug-ip={{ .Values.listenOptions.ip }}"
             - "--debug-port={{ .Values.debug.port }}"
+            {{- end }}
+            {{- if .Values.docker.enabled }}
+            {{- $dockerResources := fromYaml (include "platforma.dockerResources" .) }}
+            - "--runner-enable-docker"
+            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" $dockerResources.limits.cpu }}"
+            - "--runner-local-ram={{ $dockerResources.limits.memory }}"
+              {{- if .Values.gcp.gar }}
+            - "--google-artifact-registry={{ .Values.docker.gar }}"
+            - "--default-docker-registry={{ .Values.docker.gar }}"
+              {{- end -}}
+              {{- if .Values.gcp.assets }}
+            - "--assets-registry-url={{ .Values.gcp.assets }}"
+              {{- end -}}
             {{- end }}
             # Extra Arguments
             {{- range .Values.extraArgs }}
@@ -305,6 +322,10 @@ spec:
             {{- range $key, $value := .Values.env.variables }}
             - name: {{ $key }}
               value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.docker.enabled }}
+            - name: DOCKER_HOST
+              value: {{ include "platforma.dockerHost" . }}
             {{- end }}
             {{- range .Values.env.secretVariables }}
             - name: {{ .name }}
@@ -395,7 +416,7 @@ spec:
               readOnly: true
             {{- end }}
             {{- range .Values.dataLibrary.s3 }}
-            {{- if .secretRef.enabled }}
+            {{- if and .enabled .secretRef.enabled }}
             - name: datalib-s3-{{ .id }}
               mountPath: "/etc/platforma/secrets/datalib-s3/{{ .id }}"
               readOnly: true
@@ -418,44 +439,55 @@ spec:
         - name: {{ .Values.googleBatch.volumes.name }}
           persistentVolumeClaim:
             claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
-        {{- end }}
+        {{- end -}}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
         - name: license-secret
           secret:
             secretName: {{ .Values.mainOptions.licenseFile.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- if .Values.primaryStorage.s3.secretRef.enabled }}
         - name: primary-storage-s3-secret
           secret:
             secretName: {{ .Values.primaryStorage.s3.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- range .Values.dataLibrary.s3 }}
-        {{- if .secretRef.enabled }}
+        {{- if and .enabled .secretRef.enabled }}
         - name: datalib-s3-{{ .id }}
           secret:
             secretName: {{ .secretRef.name }}
-        {{- end }}
-        {{- end }}
+        {{- end -}}
+        {{- end -}}
         {{- if .Values.authOptions.htpasswd.secretRef.enabled }}
         - name: htpasswd-secret
           secret:
             secretName: {{ .Values.authOptions.htpasswd.secretRef.name }}
-        {{- end }}
+        {{- end -}}
         {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled .Values.authOptions.ldap.tls.secretRef.enabled }}
         - name: ldap-secret
           secret:
             secretName: {{ .Values.authOptions.ldap.tls.secretRef.name }}
-        {{- end }}
+        {{- end -}}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
+        {{- if .podAffinity }}
+        podAffinity:
+          {{- toYaml .podAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .podAntiAffinity }}
+        podAntiAffinity:
+          {{- toYaml .podAntiAffinity | nindent 10 }}
+        {{- end }}
+        {{- if .nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml .nodeAffinity | nindent 10 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
-      {{- end }} 
+      {{- end }}

@@ -1,0 +1,27 @@
+# Rendering test values for docker configuration testing
+# This file is used as a base for testing docker.enabled behavior
+# The docker.enabled value will be overridden via --set in individual tests
+
+docker:
+  enabled: false  # Default value, will be overridden
+  resources:
+    limits:
+      cpu: "4000m"
+      memory: "1Gi"
+    requests:
+      cpu: "3000m"
+      memory: "512Mi"
+
+# Minimal required configuration
+image:
+  repository: quay.io/milaboratories/platforma
+  tag: "test"
+
+# Minimal resources for testing
+resources:
+  limits:
+    cpu: "2000m"
+    memory: "128Mi"
+  requests:
+    cpu: "1000m"
+    memory: "64Mi"
