@@ -287,14 +287,14 @@ spec:
             - "--runner-enable-docker"
             - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" $dockerResources.limits.cpu }}"
             - "--runner-local-ram={{ $dockerResources.limits.memory }}"
-              {{- if .Values.gcp.gar }}
-            - "--google-artifact-registry={{ .Values.docker.gar }}"
-            - "--default-docker-registry={{ .Values.docker.gar }}"
-              {{- end -}}
-              {{- if .Values.gcp.assets }}
-            - "--assets-registry-url={{ .Values.gcp.assets }}"
-              {{- end -}}
             {{- end }}
+            {{- if .Values.gcp.gar }}
+            - "--google-artifact-registry={{ .Values.gcp.gar }}"
+            - "--default-docker-registry={{ .Values.gcp.gar }}"
+            {{- end -}}
+            {{- if .Values.assetsRegistry }}
+            - "--assets-registry-url={{ .Values.assetsRegistry }}"
+            {{- end -}}
             # Extra Arguments
             {{- range .Values.extraArgs }}
             - {{ . | quote }}
