@@ -20,6 +20,7 @@ jobs:
           version: v3.18.4
 
       - name: Lint base chart (schema validation)
+        shell: bash
         run: |
           helm lint charts/platforma | cat
 
@@ -54,4 +55,7 @@ jobs:
           fi
           echo "All values validated successfully."
 
-
+      - name: Run tests
+        shell: bash
+        run: |
+          ./test-ci.sh
