@@ -292,8 +292,8 @@ spec:
             - "--google-artifact-registry={{ .Values.gcp.gar }}"
             - "--default-docker-registry={{ .Values.gcp.gar }}"
             {{- end -}}
-            {{- if .Values.gcp.assets }}
-            - "--assets-registry-url={{ .Values.gcp.assets }}"
+            {{- if .Values.assetsRegistry }}
+            - "--assets-registry-url={{ .Values.assetsRegistry }}"
             {{- end -}}
             # Extra Arguments
             {{- range .Values.extraArgs }}

@@ -151,7 +151,7 @@ test_gcp_assets() {
     _manifest=$(
         render "tests/rendering-values-docker.yaml" \
             --show-only templates/deployment.yaml \
-            --set gcp.assets="https://alternative-assets-url/"
+            --set assetsRegistry="https://alternative-assets-url/"
     )
 
     check_arg "$_manifest" "--assets-registry-url=https://alternative-assets-url/" &&
