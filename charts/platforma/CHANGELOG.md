@@ -1,5 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.0] - 2025-09-24
+### Documentation
+
+- Update Documentation ([`7255b70`](https://github.com/milaboratory/platforma-helm-charts/commit/7255b706fa6ac16c787939d7015805fd656be98e))
+### MILAB-3890
+
+- Initial dind side container implementation ([`d831e17`](https://github.com/milaboratory/platforma-helm-charts/commit/d831e17ceef84ca0f828d335fccdb10623fa7ded))
+### Bugfix
+
+- Do not require secretRef to be defined when library is disabled ([`a53ffce`](https://github.com/milaboratory/platforma-helm-charts/commit/a53ffcea5138e46027dc25ccec3f37fd2512b378))
+
 ## [v2.0.6] - 2025-08-12
 ### Bug Fixes
 
