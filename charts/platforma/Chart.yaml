@@ -21,3 +21,14 @@ annotations:
       url: https://github.com/milaboratory/platforma-helm-charts
     - name: Docs
       url: https://docs.platforma.bio/
+dependencies:
+  - name: victoria-logs-single           
+    version: 0.11.8                       
+    repository: https://victoriametrics.github.io/helm-charts
+    alias: victoria-logs
+    condition: victoria-logs.enabled 
+  - name: victoria-logs-collector           
+    version: 0.0.5
+    repository: https://victoriametrics.github.io/helm-charts
+    alias: victoria-logs-collector
+    condition: victoria-logs-collector.enabled 
