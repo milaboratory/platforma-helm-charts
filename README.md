@@ -166,7 +166,7 @@ Persistence is enabled by default and controlled under `persistence`:
   - `packagesDir`: software packages
   For each you can set `existingClaim` to use existing PersistentVolumeClaim instead of automatic PVC creation for service 
   Also you can alter `size` and `storageClass`.
-- **Logging persistence**: when `logging.destination` is `dir://` or `file://`, you can persist logs with `logging.persistence.enabled`. Configuration rules are the same as for other persistent volumes.
+- **Logging persistence**: when `logging.destination` is `dir://` or `file://`, you can persist logs with `logging.persistence` in `values.yaml`, which will create a PersistentVolumeClaim (PVC) to store the log files. Configuration rules are the same as for other persistent volumes.
 - **FS data libraries**: each entry in `dataLibrary.fs` can create or reuse a PVC and is mounted at its `path`.
 
 Tip: set `existingClaim` to reuse an existing volume; otherwise set `createPvc: true` and specify `size` (and `storageClass` if needed).
@@ -533,4 +533,27 @@ Attach an IAM policy similar to the following to the role mapped via IRSA. Subst
     }
   ]
 }
+```
+
+
+### VictoriaLogs (optional)
+
+VictoriaLogs can be installed alongside Platforma for log storage and search.
+
+- **Reference values**: `charts/platforma/values-victoria-logs.yaml`
+- **Docs**: `https://docs.victoriametrics.com/helm/victoria-logs-single/`
+
+Install into the same namespace as your Platforma release:
+
+```sh
+# Replace <namespace>
+helm repo add vm https://victoriametrics.github.io/helm-charts/
+
+helm install oci://ghcr.io/victoriametrics/helm-charts/victoria-logs-single \
+  --namespace <namespace> --wait \
+  --values charts/platforma/values-victoria-logs.yaml
+
+helm install oci://ghcr.io/victoriametrics/helm-charts/victoria-logs-collector \
+  --namespace <namespace> \
+  --values charts/platforma/values-victoria-logs.yaml
 ```
