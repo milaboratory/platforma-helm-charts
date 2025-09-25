@@ -1,11 +1,6 @@
 
 # -- VictoriaLogs configuration
 #
-# For installation of VictoriaLogs, see:
-# ```
-# helm install vls vm/victoria-logs-single --namespace $NAMESPACE --wait --values charts/platforma/values-victoria-logs.yaml
-# helm install collector vm/victoria-logs-collector --namespace $NAMESPACE --values charts/platforma/values-victoria-logs.yaml
-# ```
 # See: https://docs.victoriametrics.com/helm/victoria-logs-single/
 victoria-logs:
   enabled: false
@@ -13,6 +8,10 @@ victoria-logs:
   persistentVolume:
     size: 100Gi
   fullnameOverride: victoria-logs
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
 
 victoria-logs-collector:
   enabled: false
@@ -24,6 +23,9 @@ victoria-logs-collector:
        - kubernetes.node_labels*
        - kubernetes.pod_annotations*
   resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
     requests:
       cpu: 250m
       memory: 512Mi
