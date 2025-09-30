@@ -15,10 +15,4 @@ spec:
     path: /metrics
     interval: {{ .Values.monitoring.podMonitoring.interval }}
     timeout: {{ .Values.monitoring.podMonitoring.timeout }}
-  # {{- if .Values.debug.enabled }}
-  # - port: debug
-  #   path: /debug/pprof
-  #   interval: 60s
-  #   timeout: 15s
-  # {{- end }}  
 {{- end }}
