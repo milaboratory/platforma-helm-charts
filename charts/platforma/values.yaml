@@ -576,7 +576,7 @@ logging:
 # -- Monitoring options for Prometheus endpoint
 monitoring:
   # -- Enable the /metrics endpoint and its dedicated Service for Prometheus scraping.
-  enabled: false
+  enabled: true
   # -- Port for the monitoring endpoint.
   port: 9090
   # -- Service configuration for the monitoring endpoint.
@@ -584,9 +584,26 @@ monitoring:
     # -- Type of Service for monitoring. ClusterIP is recommended.
     type: ClusterIP
     # -- Annotations for the monitoring Service, e.g., for Prometheus Operator.
-    annotations: {}
-      # prometheus.io/scrape: "true"
-      # prometheus.io/path: "/metrics"
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/metrics"
+      prometheus.io/port: "9090"
+      prometheus.io/scheme: "http"
+    # -- Labels for the monitoring Service.
+    labels:
+      app: platforma
+      component: monitoring
+ 
+  # -- PodMonitoring configuration for Google Cloud Managed Prometheus
+  podMonitoring:
+    # -- Enable PodMonitoring creation for Managed Prometheus
+    enabled: true
+    # -- Additional labels for PodMonitoring
+    labels: {}
+    # -- Scrape interval for PodMonitoring
+    interval: 30s
+    # -- Scrape timeout for PodMonitoring
+    timeout: 10s
 
 # -- Debug options for pprof endpoint
 debug:
@@ -599,7 +616,15 @@ debug:
     # -- Type of Service for debug. ClusterIP is recommended.
     type: ClusterIP
     # -- Annotations for the debug service.
-    annotations: {}
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/debug/pprof"
+      prometheus.io/port: "9091"
+      prometheus.io/scheme: "http"
+    # -- Labels for the debug Service.
+    labels:
+      app: platforma
+      component: debug
 
 # =============================================================================
 # Kubernetes Resource Configuration
@@ -684,3 +709,102 @@ affinity:
                 - platforma
         topologyKey: kubernetes.io/hostname
 tolerations: {}
+
+# =============================================================================
+# Alerting Configuration
+# =============================================================================
+
+# -- PrometheusRule configuration for alerting
+alerting:
+  # -- Enable PrometheusRule creation
+  enabled: false
+  # -- Additional labels for PrometheusRule
+  labels: {}
+  # -- Alerting rules
+  rules:
+    # -- Core metrics alerts
+    core:
+      # -- High JSON canonicalization error rate
+      highJsonCanonicalizationErrors:
+        enabled: true
+        expr: 'rate(core_transaction_canonical_json_total{status="error"}[5m]) > 0.01'
+        for: 2m
+        severity: warning
+        summary: "High error rate in JSON canonicalization"
+        description: "JSON canonicalization error rate is {{ $value }} errors/sec"
+      
+      # -- Slow JSON canonicalization
+      slowJsonCanonicalization:
+        enabled: true
+        expr: 'rate(core_transaction_canonical_json_milliseconds_total[5m]) > 1000'
+        for: 5m
+        severity: warning
+        summary: "Slow JSON canonicalization"
+        description: "JSON canonicalization is taking {{ $value }} ms/sec"
+      
+      # -- High system event errors
+      highSystemEventErrors:
+        enabled: true
+        expr: 'rate(core_sysevent_events_total{status="error"}[5m]) > 0.005'
+        for: 2m
+        severity: critical
+        summary: "High system event error rate"
+        description: "System event error rate is {{ $value }} errors/sec"
+    
+    # -- Workflow controller alerts
+    workflow:
+      # -- High workflow template errors
+      highWorkflowTemplateErrors:
+        enabled: true
+        expr: 'rate(controllers_workflow_tengo_template_runs_total{status="error"}[5m]) > 0.01'
+        for: 2m
+        severity: warning
+        summary: "High workflow template error rate"
+        description: "Workflow template error rate is {{ $value }} errors/sec"
+      
+      # -- Slow template execution
+      slowTemplateExecution:
+        enabled: true
+        expr: 'histogram_quantile(0.95, rate(controllers_workflow_tengo_template_evaluation_time_seconds_bucket[5m])) > 10'
+        for: 5m
+        severity: warning
+        summary: "Slow template execution"
+        description: "95th percentile template execution time is {{ $value }} seconds"
+      
+      # -- High template cache miss rate
+      highTemplateCacheMissRate:
+        enabled: true
+        expr: 'rate(controllers_workflow_tengo_template_cache_misses[5m]) / (rate(controllers_workflow_tengo_template_cache_hits[5m]) + rate(controllers_workflow_tengo_template_cache_misses[5m])) > 0.5'
+        for: 5m
+        severity: warning
+        summary: "High template cache miss rate"
+        description: "Template cache miss rate is {{ $value }}"
+      
+      # -- Execution queue backlog
+      executionQueueBacklog:
+        enabled: true
+        expr: 'controllers_workflow_execution_queue_added - sum(controllers_workflow_execution_queue_finished) > 100'
+        for: 2m
+        severity: critical
+        summary: "High execution queue backlog"
+        description: "Execution queue backlog is {{ $value }} tasks"
+    
+    # -- System resource alerts
+    system:
+      # -- High memory usage
+      highMemoryUsage:
+        enabled: true
+        expr: 'process_resident_memory_bytes / 1024 / 1024 / 1024 > 4'
+        for: 5m
+        severity: critical
+        summary: "High memory usage"
+        description: "Memory usage is {{ $value }} GB"
+      
+      # -- High CPU usage
+      highCpuUsage:
+        enabled: true
+        expr: 'rate(process_cpu_seconds_total[5m]) > 0.8'
+        for: 5m
+        severity: warning
+        summary: "High CPU usage"
+        description: "CPU usage is {{ $value }}"

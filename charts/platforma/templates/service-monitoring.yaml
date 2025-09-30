@@ -3,8 +3,14 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "platforma.fullname" . }}-monitoring
+  # namespace: {{ .Release.Namespace }}
   labels:
+    app: {{ include "platforma.name" . }}
+    release: {{ .Release.Name }}
     {{- include "platforma.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- with .Values.monitoring.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
