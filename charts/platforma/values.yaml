@@ -576,7 +576,7 @@ logging:
 # -- Monitoring options for Prometheus endpoint
 monitoring:
   # -- Enable the /metrics endpoint and its dedicated Service for Prometheus scraping.
-  enabled: true
+  enabled: false
   # -- Port for the monitoring endpoint.
   port: 9090
   # -- Service configuration for the monitoring endpoint.
@@ -585,14 +585,10 @@ monitoring:
     type: ClusterIP
     # -- Annotations for the monitoring Service, e.g., for Prometheus Operator.
     annotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/path: "/metrics"
-      prometheus.io/port: "9090"
-      prometheus.io/scheme: "http"
-    # -- Labels for the monitoring Service.
-    labels:
-      app: platforma
-      component: monitoring
+      # prometheus.io/scrape: "true"
+      # prometheus.io/path: "/metrics"
+      # prometheus.io/port: "9090"
+      # prometheus.io/scheme: "http"
  
   # -- PodMonitoring configuration for Google Cloud Managed Prometheus
   podMonitoring:
