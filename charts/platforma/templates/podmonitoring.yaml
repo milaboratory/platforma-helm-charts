@@ -1,0 +1,24 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.podMonitoring.enabled }}
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: {{ include "platforma.fullname" . }}-metrics
+  # namespace: {{ .Release.Namespace }}  # <- remove this line or keep templated; DO NOT hardcode "default"
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "platforma.selectorLabels" . | nindent 6 }}
+  endpoints:
+  - port: monitoring
+    path: /metrics
+    interval: {{ .Values.monitoring.podMonitoring.interval }}
+    timeout: {{ .Values.monitoring.podMonitoring.timeout }}
+  # {{- if .Values.debug.enabled }}
+  # - port: debug
+  #   path: /debug/pprof
+  #   interval: 60s
+  #   timeout: 15s
+  # {{- end }}  
+{{- end }}
