@@ -587,6 +587,17 @@ monitoring:
     annotations: {}
       # prometheus.io/scrape: "true"
       # prometheus.io/path: "/metrics"
+      # prometheus.io/port: "9090"
+      # prometheus.io/scheme: "http"
+ 
+  # -- PodMonitoring configuration for Google Cloud Managed Prometheus
+  podMonitoring:
+    # -- Enable PodMonitoring creation for Managed Prometheus
+    enabled: false
+    # -- Scrape interval for PodMonitoring
+    interval: 30s
+    # -- Scrape timeout for PodMonitoring
+    timeout: 10s
 
 # -- Debug options for pprof endpoint
 debug:
