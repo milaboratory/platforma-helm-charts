@@ -1,5 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.1] - 2025-10-02
+### Features
+
+- PodMonitoring [draft] ([`58a972b`](https://github.com/milaboratory/platforma-helm-charts/commit/58a972ba4080eb746cf8925a098a9d539b38a55a))
+### Ref
+
+- Disable by default ([`5958a30`](https://github.com/milaboratory/platforma-helm-charts/commit/5958a309be453c4a18ac8028afbac4e34c27a6c9))
+- Drop alerts ([`0db2e3b`](https://github.com/milaboratory/platforma-helm-charts/commit/0db2e3b0f5ac0e7475664a00bf0b524833adf224))
+- Cleanup unused ([`c8c637e`](https://github.com/milaboratory/platforma-helm-charts/commit/c8c637e4e8c086f550406c161015e5403e5d84fd))
+- Clear unused ([`c2d2c14`](https://github.com/milaboratory/platforma-helm-charts/commit/c2d2c144d048abaedc79122df899e42c68ec6edd))
+- Rename file ([`0c6519d`](https://github.com/milaboratory/platforma-helm-charts/commit/0c6519da9f5f2697128e050a961fd7d9e8353b44))
+
 ## [v2.1.0] - 2025-09-24
 ### Documentation
 
