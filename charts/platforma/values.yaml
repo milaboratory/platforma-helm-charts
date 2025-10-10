@@ -17,7 +17,18 @@ imagePullSecrets: []
 
 # -- Enable internal Docker daemon (docker:dind) and share socket + work storage
 docker:
+  # -- Enable the Docker-in-Docker (dind) sidecar deployment.
+  # This is required for running Docker-based jobs within Platforma.
+  # The container runs in a secure rootless mode.
   enabled: false
+
+  # -- Image configuration for the Docker-in-Docker container.
+  image:
+    repository: "docker"
+    tag: "25.0" # The base tag, "-dind-rootless" will be appended automatically.
+    pullPolicy: IfNotPresent
+
+  # -- Resource requests and limits for the Docker container.
   resources:
     limits:
       cpu: ""
@@ -25,6 +36,22 @@ docker:
     requests:
       cpu: ""
       memory: ""
+
+  # -- Security context for the rootless Docker-in-Docker container.
+  # This configuration is required for rootless mode to function correctly.
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      add:
+        - SYS_ADMIN
+      drop:
+        - ALL
+    seccompProfile:
+      type: Unconfined
+
 
 # -- Service Account configuration
 serviceAccount:
