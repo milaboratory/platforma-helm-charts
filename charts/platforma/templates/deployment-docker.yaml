@@ -26,7 +26,11 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "platforma.serviceAccountName" . }}
-      {{- with $.Values.nodeSelector }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -51,10 +55,10 @@ spec:
       {{- end }}
       containers:
         - name: docker-daemon
-          image: docker:25.0-dind
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag }}-dind-rootless"
+          imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
           securityContext:
-            privileged: true
+            {{- toYaml .Values.docker.securityContext | nindent 12 }}
           env:
             - name: DOCKER_TLS_CERTDIR
               value: ""
