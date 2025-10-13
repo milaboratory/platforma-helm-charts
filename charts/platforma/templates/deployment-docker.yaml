@@ -51,7 +51,7 @@ spec:
       {{- end }}
       containers:
         - name: docker-daemon
-          image: docker:25.0-dind
+          image: docker:dind-rootless
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
