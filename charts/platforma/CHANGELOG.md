@@ -1,5 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.2] - 2025-10-17
+### Miscellaneous Tasks
+
+- Sync with gsk settings ([`6c04d99`](https://github.com/milaboratory/platforma-helm-charts/commit/6c04d99be8fcb5fe8688a826002db3a4a465bf04))
+- Add docker privileged ([`4d2baf1`](https://github.com/milaboratory/platforma-helm-charts/commit/4d2baf15f690e43f4dc34d3f98167610429dd3d2))
+- Add rootless docker configuration ([`cca0a00`](https://github.com/milaboratory/platforma-helm-charts/commit/cca0a00f6dc852f5b619b5a07151952744f72e11))
+
 ## [v2.1.1] - 2025-10-02
 ### Features
 
