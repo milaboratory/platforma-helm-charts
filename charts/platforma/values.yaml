@@ -17,7 +17,24 @@ imagePullSecrets: []
 
 # -- Enable internal Docker daemon (docker:dind) and share socket + work storage
 docker:
+  # -- Enable the Docker-in-Docker (dind) sidecar deployment.
+  # This is required for running Docker-based jobs within Platforma.
+  # The container runs in a secure rootless mode.
   enabled: false
+
+  # -- Run docker-in-docker container in rootless mode.
+  # It is recommended to keep this enabled for security reasons.
+  # Disable only if your Kubernetes environment (like GKE Autopilot)
+  # does not support the necessary features for rootless containers (e.g., user namespaces).
+  rootless: false
+
+  # -- Image configuration for the Docker-in-Docker container.
+  image:
+    repository: "docker"
+    tag: "28.0" # The base tag, "-dind" or "-dind-rootless" will be appended based on the `rootless` flag.
+    pullPolicy: IfNotPresent
+
+  # -- Resource requests and limits for the Docker container.
   resources:
     limits:
       cpu: ""
@@ -25,6 +42,24 @@ docker:
     requests:
       cpu: ""
       memory: ""
+
+  # -- Security context definitions for the Docker-in-Docker container.
+  # The appropriate context is selected based on the `docker.rootless` flag.
+  securityContexts:
+    # -- Security context for the default (privileged) Docker-in-Docker container.
+    # WARNING: This runs the container as root with full privileges on the node.
+    # Use with extreme caution and only when necessary.
+    default:
+      privileged: true
+
+    # -- Security context for the rootless Docker-in-Docker container.
+    # This configuration is required for rootless mode to function correctly.
+    rootless:
+      privileged: true
+      runAsNonRoot: true
+
+  # -- Affinity settings for the docker pod.
+  affinity: {}
 
 # -- Service Account configuration
 serviceAccount:
@@ -692,6 +727,5 @@ affinity:
               operator: In
               values:
                 - platforma-docker
-                - platforma
         topologyKey: kubernetes.io/hostname
-tolerations: {}
+tolerations: []

@@ -26,35 +26,34 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "platforma.serviceAccountName" . }}
-      {{- with $.Values.nodeSelector }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.tolerations }}
+      {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $.Values.affinity }}
+      {{- with .Values.docker.affinity }}
       affinity:
-        {{- if .podAffinity }}
-        podAffinity:
-          {{- toYaml .podAffinity | nindent 10 }}
-        {{- end }}
-        {{- if .podAntiAffinity }}
-        podAntiAffinity:
-          {{- toYaml .podAntiAffinity | nindent 10 }}
-        {{- end }}
-        {{- if .nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml .nodeAffinity | nindent 10 }}
-        {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: docker-daemon
-          image: docker:25.0-dind
-          imagePullPolicy: IfNotPresent
+          {{- if .Values.docker.rootless }}
+          image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag }}-dind-rootless"
           securityContext:
-            privileged: true
+            {{- toYaml .Values.docker.securityContexts.rootless | nindent 12 }}
+          {{- else }}
+          image: "{{ .Values.docker.image.repository }}:{{ .Values.docker.image.tag }}-dind"
+          securityContext:
+            {{- toYaml .Values.docker.securityContexts.default | nindent 12 }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.docker.image.pullPolicy }}
           env:
             - name: DOCKER_TLS_CERTDIR
               value: ""
