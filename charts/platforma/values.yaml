@@ -55,17 +55,8 @@ docker:
     # -- Security context for the rootless Docker-in-Docker container.
     # This configuration is required for rootless mode to function correctly.
     rootless:
-      # The container entrypoint script needs to run as root to set up the
-      # rootless environment, before dropping privileges for the daemon.
-      # Therefore, we do not enforce runAsNonRoot at the pod level.
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-          - SYS_ADMIN
-        drop:
-          - ALL
-      seccompProfile:
-        type: Unconfined
+      privileged: true
+      runAsNonRoot: true
 
   # -- Affinity settings for the docker pod.
   affinity: {}
