@@ -624,7 +624,7 @@ monitoring:
       # prometheus.io/path: "/metrics"
       # prometheus.io/port: "9090"
       # prometheus.io/scheme: "http"
- 
+
   # -- PodMonitoring configuration for Google Cloud Managed Prometheus
   podMonitoring:
     # -- Enable PodMonitoring creation for Managed Prometheus
@@ -716,16 +716,5 @@ resources:
 
 # -- Node selector, affinity, and tolerations
 nodeSelector: {}
-affinity:
-  # -- Pod affinity rules to ensure docker and main service pods are scheduled on the same node
-  # This will be processed by the deployment templates to create proper podAffinity rules
-  podAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-            - key: app.kubernetes.io/name
-              operator: In
-              values:
-                - platforma-docker
-        topologyKey: kubernetes.io/hostname
+affinity: {}
 tolerations: []
