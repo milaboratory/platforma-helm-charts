@@ -301,7 +301,7 @@ spec:
             {{- end }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.listenOptions.port }}
               protocol: TCP
             {{- if .Values.primaryStorage.fs.enabled }}
             - name: http
