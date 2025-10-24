@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.4] - 2025-10-24
+### Miscellaneous Tasks
+
+- Fix container port ([`49285d4`](https://github.com/milaboratory/platforma-helm-charts/commit/49285d4efe8db98b8d581fda6ce55a4cc7dfa0c4))
+
 ## [v2.1.3] - 2025-10-17
 ### Miscellaneous Tasks
 
