@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.3] - 2025-10-17
+### Miscellaneous Tasks
+
+- Remove default affinity ([`20a70f0`](https://github.com/milaboratory/platforma-helm-charts/commit/20a70f0814da0f9aeebf1ff53d464c1cc4cfc7a1))
+
 ## [v2.1.2] - 2025-10-17
 ### Miscellaneous Tasks
 
