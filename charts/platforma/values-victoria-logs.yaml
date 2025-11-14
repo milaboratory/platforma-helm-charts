@@ -1,0 +1,31 @@
+
+# -- VictoriaLogs configuration
+#
+# See: https://docs.victoriametrics.com/helm/victoria-logs-single/
+victoria-logs:
+  enabled: false
+  retentionPeriod: 7d
+  persistentVolume:
+    size: 100Gi
+  fullnameOverride: victoria-logs
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+victoria-logs-collector:
+  enabled: false
+  remoteWrite:
+    - url: http://victoria-logs-server:9428
+      msgField: 
+       - message.msg
+      ignoreFields:
+       - kubernetes.node_labels*
+       - kubernetes.pod_annotations*
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 250m
+      memory: 512Mi
