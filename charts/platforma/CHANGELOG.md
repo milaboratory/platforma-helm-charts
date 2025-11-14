@@ -1,5 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.5] - 2025-11-14
+### Miscellaneous Tasks
+
+- Add job google batch template example ([`1476837`](https://github.com/milaboratory/platforma-helm-charts/commit/14768375cbb8b3b9e579493ab63d3f30148b5ae2))
+- Add google batch job template ([`d6a00b2`](https://github.com/milaboratory/platforma-helm-charts/commit/d6a00b2b7edf5d7346d4c04c1d511c2c2fc86b4e))
+
 ## [v2.1.4] - 2025-10-24
 ### Miscellaneous Tasks
 
