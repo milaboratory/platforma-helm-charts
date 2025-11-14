@@ -560,6 +560,29 @@ googleBatch:
   subnetwork: "projects/YOUR_PROJECT/regions/europe-west3/subnetworks/YOUR_SUBNET"
   provisioning: "SPOT"
   serviceAccount: "" # GCP service account for Google Batch jobs
+  # -- Custom job template for Google Batch.
+  # This allows for more granular control over the job definition.
+  # See: https://cloud.google.com/batch/docs/create-job-template-api
+  customJobTemplate:
+    enabled: false
+    # -- Provide the job template content as a multi-line string.
+    # When specified, a ConfigMap will be automatically created to store this template.
+    # This is useful for self-contained charts.
+    # Example:
+    # inline: |
+    #   {
+    #     "allocationPolicy": {
+    #       ...
+    #     }
+    #   }
+    inline: ""
+    # -- Reference a pre-existing ConfigMap that contains the job template.
+    # This is useful when the template is managed outside of this chart.
+    configMap:
+      # -- The name of the ConfigMap.
+      name: ""
+      # -- The key within the ConfigMap that contains the template file.
+      key: ""
   # -- Volumes for Google Batch. This is used to mount the shared NFS volume.
   volumes:
     enabled: false
