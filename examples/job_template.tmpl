@@ -28,10 +28,14 @@
     "nfs": {
         "server": {{ printf "%q" .NFS.Server }},
         "remotePath": {{ printf "%q" .NFS.RemotePath }},
+        {{- if .NFS.MountOptions }}
         "mountOptions": {{ printf "%q" .NFS.MountOptions }}
+        {{- end }}
     },
     "mountPath": {{ printf "%q" .MountPath }},
+    {{- if .MountOptions }}
     "mountOptions": {{ printf "%q" .MountOptions }}
+    {{- end }}
 }
 {{- end -}}
 
