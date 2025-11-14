@@ -226,6 +226,13 @@ spec:
             {{- if $gbSa }}
             - "--google-batch-service-account={{ $gbSa }}"
             {{- end }}
+            {{- if .Values.googleBatch.customJobTemplate.enabled }}
+            {{- if .Values.googleBatch.customJobTemplate.configMap.name }}
+            - "--google-batch-custom-job-template=/etc/platforma/templates/google-batch-custom-job-template-cm/{{ .Values.googleBatch.customJobTemplate.configMap.key }}"
+            {{- else if .Values.googleBatch.customJobTemplate.inline }}
+            - "--google-batch-custom-job-template=/etc/platforma/templates/google-batch-custom-job-template-inline/job-template.tmpl"
+            {{- end }}
+            {{- end }}
             {{- end }}
             # Authentication Options
             {{- if and (not .Values.authOptions.htpasswd.enabled) (not .Values.authOptions.ldap.enabled) }}
@@ -404,6 +411,15 @@ spec:
             - name: {{ .Values.googleBatch.volumes.name }}
               mountPath: {{ .Values.googleBatch.volumes.mountPath }}
             {{- end }}
+            {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
+            - name: google-batch-custom-job-template-cm
+              mountPath: "/etc/platforma/templates/google-batch-custom-job-template-cm"
+              readOnly: true
+            {{- else if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.inline }}
+            - name: google-batch-custom-job-template-inline
+              mountPath: "/etc/platforma/templates/google-batch-custom-job-template-inline"
+              readOnly: true
+            {{- end }}
             {{- include "platforma.volumeMounts" . | nindent 12 }}
             {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
             - name: license-secret
@@ -440,6 +456,15 @@ spec:
           persistentVolumeClaim:
             claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
         {{- end -}}
+        {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
+        - name: google-batch-custom-job-template-cm
+          configMap:
+            name: {{ .Values.googleBatch.customJobTemplate.configMap.name }}
+        {{- else if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.inline }}
+        - name: google-batch-custom-job-template-inline
+          configMap:
+            name: {{ printf "%s-job-template" (include "platforma.fullname" .) }}
+        {{- end }}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
         - name: license-secret
