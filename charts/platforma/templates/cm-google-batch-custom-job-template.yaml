@@ -1,0 +1,11 @@
+{{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.inline }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-job-template" (include "platforma.fullname" .) }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+data:
+  job-template.tmpl: |-
+{{ .Values.googleBatch.customJobTemplate.inline | nindent 4 }}
+{{- end }}
