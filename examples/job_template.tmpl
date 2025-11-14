@@ -1,0 +1,124 @@
+{{- /* Subtemplates for items */ -}}
+{{- define "RunnableItem" -}}
+{
+    "script": {
+        "text": {{ printf "%q" .Script.Text }}
+    },
+    "environment": {
+        "variables": {
+            {{- $ss := "" -}} {{- /* ss is array separator */ -}}
+            {{- range $k, $v := .Environment.Variables -}}
+                {{$ss}}{{ printf "%q" $k }}: {{ printf "%q" $v }}
+                {{$ss = ","}} {{- /* ss is array separator */ -}}
+            {{- end -}} 
+        },
+        "secretVariables": { 
+            {{- $ss := "" -}}
+            {{- range $k, $v := .Environment.SecretVariables -}}
+                {{$ss}}{{ printf "%q" $k }}: {{ printf "%q" $v }}
+                {{$ss = ","}} {{- /* ss is array separator */ -}}
+            {{- end -}} 
+        }
+    }
+}
+{{- end -}}
+
+{{- define "VolumeItem" -}}
+{
+    "nfs": {
+        "server": {{ printf "%q" .NFS.Server }},
+        "remotePath": {{ printf "%q" .NFS.RemotePath }},
+        "mountOptions": {{ printf "%q" .NFS.MountOptions }}
+    },
+    "mountPath": {{ printf "%q" .MountPath }},
+    "mountOptions": {{ printf "%q" .MountOptions }}
+}
+{{- end -}}
+
+{{- define "TaskGroupItem" -}}
+{
+"taskSpec": {
+    "runnables": [ 
+        {{- $ss := "" -}}
+        {{- range .TaskSpec.Runnables -}}
+        {{$ss}}{{ template "RunnableItem" . }}
+        {{- $ss = ","}} {{- /* ss is array separator */ -}}
+        {{- end -}}
+    ],
+    "computeResource": {
+        "cpuMilli": {{ .TaskSpec.ComputeResource.CPUMilli }},
+        "memoryMib": {{ .TaskSpec.ComputeResource.MemoryMib }}
+    },
+    "volumes": [
+        {{- $ss := "" -}}
+        {{- range .TaskSpec.Volumes -}}
+        {{$ss}}{{ template "VolumeItem" . }}
+        {{- $ss = ","}} {{- /* ss is array separator */ -}}
+        {{- end -}}
+    ],
+    "maxRetryCount": {{ .TaskSpec.MaxRetryCount }},
+    "maxRunDuration": {{ printf "%q" .TaskSpec.MaxRunDuration }}
+},
+"taskCount": {{ .TaskCount }},
+"parallelism": {{ .Parallelism }},
+"runAsNonRoot": {{ .RunAsNonRoot }}
+}
+{{- end -}}
+
+{{- define "NetworkInterfaceItem" -}}
+{ 
+    "network": {{ printf "%q" .Network }},
+    "subnetwork": {{ printf "%q" .Subnetwork }}
+}
+{{- end -}}
+
+{{- define "InstanceItem" -}}
+{
+    "policy": {
+        "bootDisk": {
+            "image": {{ printf "%q" .Policy.BootDisk.Image }} 
+        },
+        "machineType": {{ printf "%q" .Policy.MachineType }},
+        "provisioningModel": {{ printf "%q" .Policy.ProvisioningModel }}
+    }
+}
+{{- end -}}
+
+{
+    "taskGroups": [
+        {{- $ss := "" -}}
+        {{- range .TaskGroups -}}
+        {{$ss}}{{ template "TaskGroupItem" . }}
+        {{- $ss = ","}} {{- /* ss is array separator */ -}}
+        {{- end -}}
+    ],
+    "allocationPolicy": {
+        "network": {
+            "networkInterfaces": [ {{- $ss := "" -}}
+            {{- range .AllocationPolicy.Network.NetworkInterfaces -}}
+            {{$ss}}{{ template "NetworkInterfaceItem" . }}
+            {{- $ss = ","}} {{- /* ss is array separator */ -}}
+            {{- end -}} ]
+        },
+        "instances": [ 
+            {{- $ss := "" -}}
+            {{- range .AllocationPolicy.Instances -}}
+            {{$ss}}{{ template "InstanceItem" . }}
+            {{- $ss = ","}} {{- /* ss is array separator */ -}}
+            {{- end -}}
+        ],
+        "serviceAccount": {
+            "email": {{ printf "%q" .AllocationPolicy.ServiceAccount.Email }}
+        }
+    },
+    "labels": {
+        {{- $ss := "" -}}
+        {{- range $k, $v := .Labels -}}
+        {{$ss}}{{ printf "%q" $k }}: {{ printf "%q" $v }}
+        {{- $ss = ","}} {{- /* ss is array separator */ -}}
+        {{- end -}}
+    },
+    "logsPolicy": {
+        "destination": {{ printf "%q" .LogsPolicy.Destination }}
+    }
+}
