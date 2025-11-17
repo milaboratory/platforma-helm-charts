@@ -218,12 +218,74 @@ You can create secrets from files or literal values.
 
 ### 2. Reference Secrets in `values.yaml`
 
-Reference the secrets in `values.yaml` under the appropriate section (e.g., `authOptions.ldap.secretRef`, `mainOptions.licenseFile.secretRef`, `primaryStorage.s3.secretRef`).
+Reference the secrets in `values.yaml` under the appropriate section (e.g., `authOptions.ldap.tls`, `mainOptions.licenseFile.secretRef`, `primaryStorage.s3.secretRef`).
 
 ### 3. How It Works
 
 The chart mounts the referenced secret as files into the pod (e.g., at `/etc/platforma/secrets/ldap/`), and the application is automatically configured to use these file paths.
 
+### LDAP TLS Configuration
+
+The chart provides a flexible way to configure TLS for LDAP connections, allowing you to secure communication with your directory server. You can configure a CA certificate to verify the server and a client certificate for mutual authentication (mTLS).
+
+Certificates and keys can be provided from three sources, in order of precedence:
+1.  **Kubernetes Secret** (`secretRef`): Recommended for sensitive data like private keys.
+2.  **ConfigMap** (`configMapRef`): Suitable for public certificates like CAs.
+3.  **File Path** (`path`): A direct path within the container's filesystem.
+
+#### Verifying the LDAP Server with a CA Certificate
+
+To make the application trust your LDAP server (especially if it uses a self-signed certificate or a private CA), you must provide a CA certificate.
+
+**Example: CA from a ConfigMap**
+
+1.  Create the ConfigMap:
+    ```sh
+    kubectl create configmap ldap-ca-cm --from-file=ca.crt=./my-ca.crt
+    ```
+
+2.  Reference it in `values.yaml`:
+    ```yaml
+    authOptions:
+      ldap:
+        enabled: true
+        server: "ldaps://my-ldap-server:636"
+        tls:
+          enabled: true
+          ca:
+            configMapRef:
+              enabled: true
+              name: "ldap-ca-cm"
+              key: "ca.crt"
+    ```
+
+#### Client Certificate Authentication (mTLS)
+
+If your LDAP server requires clients to present a certificate, you can configure a client certificate and private key.
+
+**Example: Client Cert/Key from a Secret**
+
+1.  Create the Secret:
+    ```sh
+    kubectl create secret tls ldap-client-secret --cert=./client.crt --key=./client.key
+    ```
+
+2.  Reference it in `values.yaml`:
+    ```yaml
+    authOptions:
+      ldap:
+        enabled: true
+        # ... other LDAP settings
+        tls:
+          enabled: true
+          # You might also need a CA here
+          client:
+            secretRef:
+              enabled: true
+              name: "ldap-client-secret"
+              certKey: "tls.crt" # Default key in a kubernetes.io/tls secret
+              keyKey: "tls.key"  # Default key in a kubernetes.io/tls secret
+    ```
 ---
 
 ## Storage Configuration
@@ -311,6 +373,11 @@ The `googleBatch` section in `values.yaml` controls this integration.
 -   **`serviceAccount`**: The email of the GCP service account that Google Batch jobs will use. This service account needs appropriate permissions for Batch and storage access.
 -   **`network` / `subnetwork`**: The VPC network and subnetwork for the Batch jobs.
 -   **`volumes`**: Configures the shared NFS volume. Provide EITHER `existingClaim` (reuse an existing PVC) OR `storageClass` + `size` (let the chart create a PVC). Set `accessMode` as needed (default `ReadWriteMany`).
+
+-   **`customJobTemplate`**: Provides a way to override the default Google Batch job structure.
+    -   `enabled`: Set to `true` to use the custom template.
+    -   `inline`: A multi-line string containing the job template JSON. A ConfigMap will be created from this value.
+    -   `configMap`: Reference a pre-existing ConfigMap by `name` and `key`.
 
 **Example Configuration:**
 

@@ -254,15 +254,19 @@ spec:
             - "--auth-ldap-start-tls"
             {{- end }}
             {{- if .Values.authOptions.ldap.tls.enabled }}
-            {{- if .Values.authOptions.ldap.tls.secretRef.enabled }}
-            - "--auth-ldap-tls=/etc/platforma/secrets/ldap/{{ .Values.authOptions.ldap.tls.secretRef.certKey }},/etc/platforma/secrets/ldap/{{ .Values.authOptions.ldap.tls.secretRef.keyKey }}"
-            {{- else if and .Values.authOptions.ldap.tls.certPath .Values.authOptions.ldap.tls.keyPath }}
-            - "--auth-ldap-tls={{ .Values.authOptions.ldap.tls.certPath }},{{ .Values.authOptions.ldap.tls.keyPath }}"
+            {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
+            - "--auth-ldap-tls=/etc/platforma/secrets/ldap-client/{{ .Values.authOptions.ldap.tls.client.secretRef.certKey }},/etc/platforma/secrets/ldap-client/{{ .Values.authOptions.ldap.tls.client.secretRef.keyKey }}"
+            {{- else if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
+            - "--auth-ldap-tls=/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.certKey }},/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.keyKey }}"
+            {{- else if and .Values.authOptions.ldap.tls.client.certPath .Values.authOptions.ldap.tls.client.keyPath }}
+            - "--auth-ldap-tls={{ .Values.authOptions.ldap.tls.client.certPath }},{{ .Values.authOptions.ldap.tls.client.keyPath }}"
             {{- end }}
-            {{- if and .Values.authOptions.ldap.tls.secretRef.enabled .Values.authOptions.ldap.tls.secretRef.caKey }}
-            - "--auth-ldap-cas=/etc/platforma/secrets/ldap/{{ .Values.authOptions.ldap.tls.secretRef.caKey }}"
-            {{- else if .Values.authOptions.ldap.tls.casPath }}
-            - "--auth-ldap-cas={{ .Values.authOptions.ldap.tls.casPath }}"
+            {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
+            - "--auth-ldap-cas=/etc/platforma/secrets/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.secretRef.key }}"
+            {{- else if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
+            - "--auth-ldap-cas=/etc/platforma/cm/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.configMapRef.key }}"
+            {{- else if .Values.authOptions.ldap.tls.ca.path }}
+            - "--auth-ldap-cas={{ .Values.authOptions.ldap.tls.ca.path }}"
             {{- end }}
             {{- end }}
             {{- if .Values.authOptions.ldap.rootCas }}
@@ -443,10 +447,27 @@ spec:
               mountPath: "/etc/platforma/secrets/htpasswd"
               readOnly: true
             {{- end }}
-            {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled .Values.authOptions.ldap.tls.secretRef.enabled }}
-            - name: ldap-secret
-              mountPath: "/etc/platforma/secrets/ldap"
+            {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled }}
+            {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
+            - name: ldap-client-secret
+              mountPath: "/etc/platforma/secrets/ldap-client"
               readOnly: true
+            {{- end }}
+            {{- if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
+            - name: ldap-client-cm
+              mountPath: "/etc/platforma/cm/ldap-client"
+              readOnly: true
+            {{- end }}
+            {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
+            - name: ldap-ca-secret
+              mountPath: "/etc/platforma/secrets/ldap-ca"
+              readOnly: true
+            {{- end }}
+            {{- if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
+            - name: ldap-ca-cm
+              mountPath: "/etc/platforma/cm/ldap-ca"
+              readOnly: true
+            {{- end }}
             {{- end }}
       # -- Volumes for the pod.
       # This is automatically populated based on your persistence settings.
@@ -488,10 +509,27 @@ spec:
           secret:
             secretName: {{ .Values.authOptions.htpasswd.secretRef.name }}
         {{- end -}}
-        {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled .Values.authOptions.ldap.tls.secretRef.enabled }}
-        - name: ldap-secret
+        {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled }}
+        {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
+        - name: ldap-client-secret
           secret:
-            secretName: {{ .Values.authOptions.ldap.tls.secretRef.name }}
+            secretName: {{ .Values.authOptions.ldap.tls.client.secretRef.name }}
+        {{- end }}
+        {{- if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
+        - name: ldap-client-cm
+          configMap:
+            name: {{ .Values.authOptions.ldap.tls.client.configMapRef.name }}
+        {{- end }}
+        {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
+        - name: ldap-ca-secret
+          secret:
+            secretName: {{ .Values.authOptions.ldap.tls.ca.secretRef.name }}
+        {{- end }}
+        {{- if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
+        - name: ldap-ca-cm
+          configMap:
+            name: {{ .Values.authOptions.ldap.tls.ca.configMapRef.name }}
+        {{- end }}
         {{- end -}}
       {{- with .Values.nodeSelector }}
       nodeSelector:

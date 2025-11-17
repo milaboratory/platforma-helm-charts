@@ -502,24 +502,43 @@ authOptions:
     # provide the client cert/key via a secret and the CA certificate via `casPath`.
     tls:
       enabled: false
-      # -- Provide certificate, key, and optional CA via direct paths on the container's filesystem.
-      # This is used if `tls.secretRef.enabled` is false.
-      certPath: ""
-      keyPath: ""
-      casPath: "" # Optional. Path to a CA certificate file.
-      # -- Provide certificate, key, and optional CA via a Kubernetes secret.
-      # The secret will be mounted to `/etc/platforma/secrets/ldap`.
-      secretRef:
-        enabled: false
-        # -- Name of the Secret containing the TLS files.
-        name: ""
-        # -- Key in the secret for the client certificate.
-        certKey: "tls.crt"
-        # -- Key in the secret for the client private key.
-        keyKey: "tls.key"
-        # -- Key in the secret for the CA certificate (optional).
-        # If specified, this takes precedence over `tls.casPath`.
-        caKey: "ca.crt"
+      # -- Configuration for the Certificate Authority (CA).
+      # Used to verify the LDAP server's certificate. This is useful for servers
+      # with self-signed certificates or private CAs.
+      ca:
+        # -- Provide CA cert from a Secret.
+        secretRef:
+          enabled: false
+          name: ""
+          key: "ca.crt"
+        # -- Provide CA cert from a ConfigMap.
+        configMapRef:
+          enabled: false
+          name: ""
+          key: "ca.crt"
+        # -- Provide CA cert via a direct path in the container.
+        # This is only used if `secretRef` and `configMapRef` are disabled.
+        path: ""
+
+      # -- Configuration for the client certificate and key (for mTLS).
+      # Provide a client certificate and private key if the LDAP server requires it.
+      client:
+        # -- Provide client cert and key from a Secret (recommended for private keys).
+        secretRef:
+          enabled: false
+          name: ""
+          certKey: "tls.crt"
+          keyKey: "tls.key"
+        # -- Provide client cert and key from a ConfigMap.
+        configMapRef:
+          enabled: false
+          name: ""
+          certKey: "tls.crt"
+          keyKey: "tls.key"
+        # -- Provide client cert and key via direct paths in the container.
+        # This is only used if `secretRef` and `configMapRef` for the client are disabled.
+        certPath: ""
+        keyPath: ""
     # -- Path to the file with system root CA certificates for LDAP (e.g., /etc/ssl/certs/ca-certificates.crt).
     # This is evaluated by the application independently of the client TLS configuration above.
     rootCas: ""
