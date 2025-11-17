@@ -1,5 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.6] - 2025-11-17
+### Bug Fixes
+
+- Wrong template ([`86b9fd1`](https://github.com/milaboratory/platforma-helm-charts/commit/86b9fd185fc64a76fea512366eea4dfef47ca739))
+### Miscellaneous Tasks
+
+- Change ladp settings update documentation ([`acafc92`](https://github.com/milaboratory/platforma-helm-charts/commit/acafc92504549241578d4d4fcb9f14837e322c4b))
+
 ## [v2.1.5] - 2025-11-14
 ### Miscellaneous Tasks
 
