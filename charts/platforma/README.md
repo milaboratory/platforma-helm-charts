@@ -222,7 +222,10 @@ Reference the secrets in `values.yaml` under the appropriate section (e.g., `aut
 
 ### 3. How It Works
 
-The chart mounts the referenced secret as files into the pod (e.g., at `/etc/platforma/secrets/ldap/`), and the application is automatically configured to use these file paths.
+The chart mounts the referenced secrets/configmaps as files into the pod at specific paths:
+- LDAP client certificates: `/etc/platforma/secrets/ldap-client/` (from Secret) or `/etc/platforma/cm/ldap-client/` (from ConfigMap)
+- LDAP CA certificates: `/etc/platforma/secrets/ldap-ca/` (from Secret) or `/etc/platforma/cm/ldap-ca/` (from ConfigMap)
+The application is automatically configured to use these file paths.
 
 ### LDAP TLS Configuration
 
@@ -376,8 +379,8 @@ The `googleBatch` section in `values.yaml` controls this integration.
 
 -   **`customJobTemplate`**: Provides a way to override the default Google Batch job structure.
     -   `enabled`: Set to `true` to use the custom template.
-    -   `inline`: A multi-line string containing the job template JSON. A ConfigMap will be created from this value.
-    -   `configMap`: Reference a pre-existing ConfigMap by `name` and `key`.
+    -   `inline`: A multi-line string containing the job template JSON. A ConfigMap will be automatically created from this value. **Note:** This option is mutually exclusive with `configMap` - use only one.
+    -   `configMap`: Reference a pre-existing ConfigMap by `name` and `key`. **Note:** This option is mutually exclusive with `inline` - use only one.
 
 **Example Configuration:**
 
@@ -396,6 +399,22 @@ googleBatch:
     accessMode: "ReadWriteMany"
     # storageClass: "filestore-rwx"
     # size: "1Ti"
+  # Optional: Custom job template
+  customJobTemplate:
+    enabled: true
+    # Option 1: Provide template inline (ConfigMap will be auto-created)
+    inline: |
+      {
+        "allocationPolicy": {
+          "location": {
+            "allowedLocations": ["us-central1"]
+          }
+        }
+      }
+    # Option 2: Reference an existing ConfigMap (mutually exclusive with inline)
+    # configMap:
+    #   name: "my-batch-job-template"
+    #   key: "job-template.json"
 ```
 
 This configuration assumes you have already created a Google Cloud Filestore instance and a corresponding PersistentVolumeClaim (`my-filestore-pvc`) in your Kubernetes cluster.
