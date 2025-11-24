@@ -289,6 +289,63 @@ If your LDAP server requires clients to present a certificate, you can configure
               certKey: "tls.crt" # Default key in a kubernetes.io/tls secret
               keyKey: "tls.key"  # Default key in a kubernetes.io/tls secret
     ```
+
+#### System Root CA Certificates
+
+You can configure system root CA certificates for LDAP authentication. This is useful when you need to specify a custom CA bundle for verifying LDAP server certificates. You can provide the root CA certificates via Secret, ConfigMap, or direct file path.
+
+**Example: Root CA from a ConfigMap**
+
+1.  Create the ConfigMap:
+    ```sh
+    kubectl create configmap ldap-root-cas-cm --from-file=ca.crt=./root-cas.crt
+    ```
+
+2.  Reference it in `values.yaml`:
+    ```yaml
+    authOptions:
+      ldap:
+        enabled: true
+        server: "ldaps://my-ldap-server:636"
+        rootCas:
+          configMapRef:
+            enabled: true
+            name: "ldap-root-cas-cm"
+            key: "ca.crt"
+    ```
+
+**Example: Root CA from a Secret**
+
+1.  Create the Secret:
+    ```sh
+    kubectl create secret generic ldap-root-cas-secret --from-file=ca.crt=./root-cas.crt
+    ```
+
+2.  Reference it in `values.yaml`:
+    ```yaml
+    authOptions:
+      ldap:
+        enabled: true
+        server: "ldaps://my-ldap-server:636"
+        rootCas:
+          secretRef:
+            enabled: true
+            name: "ldap-root-cas-secret"
+            key: "ca.crt"
+    ```
+
+**Example: Root CA from a direct path**
+
+If the root CA certificates are already available in the container filesystem:
+    ```yaml
+    authOptions:
+      ldap:
+        enabled: true
+        server: "ldaps://my-ldap-server:636"
+        rootCas:
+          path: "/etc/ssl/certs/ca-certificates.crt"
+    ```
+
 ---
 
 ## Storage Configuration
