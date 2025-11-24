@@ -275,7 +275,7 @@
         "enabled": { "type": "boolean" },
         "className": { "type": "string" },
         "annotations": { "type": "object", "additionalProperties": { "type": "string" } },
-        "host": { "type": "string" },
+        "host": { "type": ["string", "null"] },
         "tls": {
           "type": "object",
           "properties": { "enabled": { "type": "boolean" }, "secretName": { "type": "string" } },
@@ -297,7 +297,13 @@
             }
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "enabled": { "const": true } } },
+          "then": { "required": ["host"], "properties": { "host": { "type": "string" } } }
+        }
+      ]
     },
     "probes": {
       "type": "object",

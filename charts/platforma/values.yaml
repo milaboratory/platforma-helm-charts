@@ -85,6 +85,7 @@ ingress:
     # cert-manager.io/cluster-issuer: letsencrypt-prod
   # -- The hostname to be used for the Ingress resource.
   host: platforma.local
+
   # -- TLS configuration for the Ingress.
   tls:
     enabled: false
@@ -226,9 +227,9 @@ deployment:
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext:
     privileged: false # Grants all capabilities. Use with extreme caution.
-    runAsUser: 0 # Run as root user inside the container
-    runAsGroup: 0 # Run as root group inside the container
-    runAsNonRoot: false # Allow running as root user
+    runAsUser: 1010 # Run as root user inside the container
+    runAsGroup: 1010 # Run as root group inside the container
+    runAsNonRoot: true # Allow running as non-root user
     readOnlyRootFilesystem: false # Allow writing to the container's root filesystem
     allowPrivilegeEscalation: false # Allow processes to gain more privileges
     capabilities:
@@ -237,7 +238,7 @@ deployment:
   # -- Pod-level security context.
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   podSecurityContext:
-    fsGroup: 3000 # Group ID for volume ownership
+    fsGroup: 1010 # Group ID for volume ownership
     # Additional pod security context fields:
     # runAsUser: 1000 # If running as non-root
     # runAsGroup: 1000 # If running as non-root
@@ -311,7 +312,7 @@ persistence:
     accessMode: ReadWriteOnce
     size: 500Gi
     # storageClass: "standard"
-    mountPath: /data/platforma-data
+    mountPath: /data/main-root
   # -- Configuration for the database volume (advanced setup).
   # Only used if `persistence.mainRoot.enabled` is false.
   dbDir:
@@ -321,7 +322,7 @@ persistence:
     accessMode: ReadWriteOnce
     size: 20Gi
     # storageClass: "standard"
-    mountPath: /data/platforma-data/rocksdb
+    mountPath: /data/rocksdb
   # -- Configuration for the working directory volume (advanced setup).
   # Only used if `persistence.mainRoot.enabled` is false.
   workDir:
@@ -393,9 +394,9 @@ gcp:
 primaryStorage:
   # -- S3 primary storage configuration
   s3:
-    enabled: true
-    url: "s3://platforma-bucket/platforma-ci-primary/"
-    region: "eu-central-1"
+    enabled: false
+    url: ""
+    region: ""
     key: "" # It's better to use SecretKeyRef for sensitive keys
     secret: "" # It's better to use SecretKeyRef for sensitive secrets
     externalEndpoint: ""
@@ -408,10 +409,10 @@ primaryStorage:
       secretKey: "secret-key" # Key in secret for secret key
   # -- Filesystem storage option
   fs:
-    enabled: false
+    enabled: true
     url: ""
     # Auto-generate URL from listen settings
-    autoUrl: true
+    autoUrl: false
     # -- Service configuration for the HTTP endpoint needed for FS primary storage.
     # This service is only created if primaryStorage.fs.enabled is true.
     httpService:
@@ -438,22 +439,22 @@ dataLibrary:
   noDataLibrary: false
   noHostDataLibrary: false
   # -- S3 data libraries
-  s3:
-    - id: "library"
-      enabled: true
-      url: "s3://platforma-bucket/platforma-ci-library/"
-      region: "eu-central-1"
-      key: "" # It's better to use SecretKeyRef for sensitive keys
-      secret: "" # It's better to use SecretKeyRef for sensitive secrets
-      externalEndpoint: ""
-      noDataIntegrity: false
-      # Secret configuration for S3 credentials
-      secretRef:
-        enabled: false
-        name: "" # Name of the secret containing S3 credentials
-        keyKey: "access-key" # Key in secret for access key
-        secretKey: "secret-key" # Key in secret for secret key
-   # -- Filesystem data libraries. Each item in this list will create a corresponding PVC.
+  s3: []
+    # - id: "library"
+    #    enabled: false
+    #    url: "s3://platforma-bucket/platforma-ci-library/"
+    #    region: "eu-central-1"
+    #    key: "" # It's better to use SecretKeyRef for sensitive keys
+    #    secret: "" # It's better to use SecretKeyRef for sensitive secrets
+    #    externalEndpoint: ""
+    #    noDataIntegrity: false
+    #    # Secret configuration for S3 credentials
+    #    secretRef:
+    #      enabled: false
+    #      name: "" # Name of the secret containing S3 credentials
+    #      keyKey: "access-key" # Key in secret for access key
+    #      secretKey: "secret-key" # Key in secret for secret key
+  # -- Filesystem data libraries. Each item in this list will create a corresponding PVC.
   fs: []
     # - id: "my-fs-library"
     #   path: "/data/fs-library-1" # Mount path inside the container
@@ -668,7 +669,7 @@ logging:
 # -- Monitoring options for Prometheus endpoint
 monitoring:
   # -- Enable the /metrics endpoint and its dedicated Service for Prometheus scraping.
-  enabled: false
+  enabled: true
   # -- Port for the monitoring endpoint.
   port: 9090
   # -- Service configuration for the monitoring endpoint.
