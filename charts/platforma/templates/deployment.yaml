@@ -269,8 +269,12 @@ spec:
             - "--auth-ldap-cas={{ .Values.authOptions.ldap.tls.ca.path }}"
             {{- end }}
             {{- end }}
-            {{- if .Values.authOptions.ldap.rootCas }}
-            - "--auth-ldap-root-cas={{ .Values.authOptions.ldap.rootCas }}"
+            {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
+            - "--auth-ldap-root-cas=/etc/platforma/secrets/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.secretRef.key }}"
+            {{- else if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
+            - "--auth-ldap-root-cas=/etc/platforma/cm/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.configMapRef.key }}"
+            {{- else if .Values.authOptions.ldap.rootCas.path }}
+            - "--auth-ldap-root-cas={{ .Values.authOptions.ldap.rootCas.path }}"
             {{- end }}
             {{- end }}
             {{- end }}
@@ -469,6 +473,18 @@ spec:
               readOnly: true
             {{- end }}
             {{- end }}
+            {{- if .Values.authOptions.ldap.enabled }}
+            {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
+            - name: ldap-root-cas-secret
+              mountPath: "/etc/platforma/secrets/ldap-root-cas"
+              readOnly: true
+            {{- end }}
+            {{- if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
+            - name: ldap-root-cas-cm
+              mountPath: "/etc/platforma/cm/ldap-root-cas"
+              readOnly: true
+            {{- end }}
+            {{- end }}
       # -- Volumes for the pod.
       # This is automatically populated based on your persistence settings.
       volumes:
@@ -529,6 +545,18 @@ spec:
         - name: ldap-ca-cm
           configMap:
             name: {{ .Values.authOptions.ldap.tls.ca.configMapRef.name }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.authOptions.ldap.enabled }}
+        {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
+        - name: ldap-root-cas-secret
+          secret:
+            secretName: {{ .Values.authOptions.ldap.rootCas.secretRef.name }}
+        {{- end }}
+        {{- if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
+        - name: ldap-root-cas-cm
+          configMap:
+            name: {{ .Values.authOptions.ldap.rootCas.configMapRef.name }}
         {{- end }}
         {{- end -}}
       {{- with .Values.nodeSelector }}
