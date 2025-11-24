@@ -84,7 +84,8 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # cert-manager.io/cluster-issuer: letsencrypt-prod
   # -- The hostname to be used for the Ingress resource.
-  host: platforma.local
+  host: 
+  
   # -- TLS configuration for the Ingress.
   tls:
     enabled: false
@@ -228,7 +229,7 @@ deployment:
     privileged: false # Grants all capabilities. Use with extreme caution.
     runAsUser: 1010 # Run as root user inside the container
     runAsGroup: 1010 # Run as root group inside the container
-    runAsNonRoot: true # Allow running as root user
+    runAsNonRoot: true # Allow running as non-root user
     readOnlyRootFilesystem: false # Allow writing to the container's root filesystem
     allowPrivilegeEscalation: false # Allow processes to gain more privileges
     capabilities:
