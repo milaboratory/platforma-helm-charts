@@ -408,7 +408,7 @@ primaryStorage:
       secretKey: "secret-key" # Key in secret for secret key
   # -- Filesystem storage option
   fs:
-    enabled: false
+    enabled: true
     url: ""
     # Auto-generate URL from listen settings
     autoUrl: true
