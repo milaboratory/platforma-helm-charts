@@ -539,9 +539,24 @@ authOptions:
         # This is only used if `secretRef` and `configMapRef` for the client are disabled.
         certPath: ""
         keyPath: ""
-    # -- Path to the file with system root CA certificates for LDAP (e.g., /etc/ssl/certs/ca-certificates.crt).
+    # -- Configuration for system root CA certificates for LDAP.
     # This is evaluated by the application independently of the client TLS configuration above.
-    rootCas: ""
+    # You can provide the root CA certificates via Secret, ConfigMap, or direct path.
+    rootCas:
+      # -- Provide root CA certificates from a Secret.
+      secretRef:
+        enabled: false
+        name: ""
+        key: "ca.crt"
+      # -- Provide root CA certificates from a ConfigMap.
+      configMapRef:
+        enabled: false
+        name: ""
+        key: "ca.crt"
+      # -- Provide root CA certificates via a direct path in the container.
+      # This is only used if `secretRef` and `configMapRef` are disabled.
+      # Example: /etc/ssl/certs/ca-certificates.crt
+      path: ""
 
 # -- A list of extra command-line arguments to pass to the Platforma container.
 # This provides a flexible way to set CLI options that are not explicitly
