@@ -1,5 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.7] - 2025-11-24
+### Miscellaneous Tasks
+
+- Don't force ingress settings if fs is primary storage ([`af75d64`](https://github.com/milaboratory/platforma-helm-charts/commit/af75d645ce56ca21c8def7dbe7b49ab7810ba48a))
+- Fix typo ([`fce11dd`](https://github.com/milaboratory/platforma-helm-charts/commit/fce11ddc7cf15551314bde3eb559a8f7d18971fe))
+- Enable fs storage buy defualt ([`813a210`](https://github.com/milaboratory/platforma-helm-charts/commit/813a2103f22b31c2589a71f436f8629dd5b9c0e8))
+- Add additional options to pass rootCas ([`a99895d`](https://github.com/milaboratory/platforma-helm-charts/commit/a99895d1c657b919674d4a93a42bd8dd41f2ff68))
+- Update README.md ([`bb0fe6c`](https://github.com/milaboratory/platforma-helm-charts/commit/bb0fe6c1d63d21f976fee7c273c090634a2a23b4))
+- Update pl version and update defaults for platforma ([`220fb99`](https://github.com/milaboratory/platforma-helm-charts/commit/220fb9942f483e7abbbe66f59fc87e16c25fbc7f))
+
 ## [v2.1.6] - 2025-11-17
 ### Bug Fixes
 
