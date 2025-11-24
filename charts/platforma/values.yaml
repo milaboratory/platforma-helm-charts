@@ -84,8 +84,8 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # cert-manager.io/cluster-issuer: letsencrypt-prod
   # -- The hostname to be used for the Ingress resource.
-  host: 
-  
+  host: platforma.local
+
   # -- TLS configuration for the Ingress.
   tls:
     enabled: false
@@ -412,7 +412,7 @@ primaryStorage:
     enabled: true
     url: ""
     # Auto-generate URL from listen settings
-    autoUrl: true
+    autoUrl: false
     # -- Service configuration for the HTTP endpoint needed for FS primary storage.
     # This service is only created if primaryStorage.fs.enabled is true.
     httpService:
