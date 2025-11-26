@@ -499,6 +499,15 @@ authOptions:
     server: ""
     dn: ""
     startTls: false
+    # -- LDAP search password configuration.
+    # Used for LDAP bind operations when searching for users.
+    # The password can be provided via a Kubernetes Secret (recommended).
+    searchPassword:
+      # -- Provide search password from a Secret (recommended for security).
+      secretRef:
+        enabled: false
+        name: "" # Name of the Secret containing the LDAP search password
+        key: "password" # Key within the Secret that holds the password value
     # -- LDAP TLS configuration.
     # Enables client-side TLS for the LDAP connection.
     # You can mix and match how certificates are provided. For example, you can
