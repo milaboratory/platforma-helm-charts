@@ -1,5 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.8] - 2025-11-26
+### Miscellaneous Tasks
+
+- Fix tests ([`473ec8f`](https://github.com/milaboratory/platforma-helm-charts/commit/473ec8f409ed19339d8c457f3557da4f9633e377))
+- Fix values schema ([`fdc4d97`](https://github.com/milaboratory/platforma-helm-charts/commit/fdc4d97e0f492d7698a1cceefb13a83242fe3c4d))
+
 ## [v2.1.7] - 2025-11-24
 ### Miscellaneous Tasks
 
