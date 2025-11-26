@@ -17,6 +17,15 @@ image:
   repository: quay.io/milaboratories/platforma
   tag: "test"
 
+# Primary storage - required, using FS for simplicity in tests
+primaryStorage:
+  fs:
+    enabled: true
+  s3:
+    enabled: false
+  gcs:
+    enabled: false
+
 # Minimal resources for testing
 resources:
   limits:
