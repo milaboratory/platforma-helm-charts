@@ -59,7 +59,7 @@ spec:
             # Main Options
             {{- if .Values.mainOptions.licenseFile.enabled }}
             {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
-            - "--license-file=/etc/platforma/secrets/license/{{ .Values.mainOptions.licenseFile.secretRef.key }}"
+            - "--license-file=/etc/platforma/secrets/license/{{ required "A key for the license file secret is required (.Values.mainOptions.licenseFile.secretRef.key)" .Values.mainOptions.licenseFile.secretRef.key }}"
             {{- else }}
             - "--license-file={{ .Values.mainOptions.licenseFile.path }}"
             {{- end }}
@@ -115,8 +115,8 @@ spec:
             - "--primary-storage-s3-region={{ .Values.primaryStorage.s3.region }}"
             {{- end }}
             {{- if .Values.primaryStorage.s3.secretRef.enabled }}
-            - "--primary-storage-s3-key=/etc/platforma/secrets/primary-storage-s3/{{ .Values.primaryStorage.s3.secretRef.keyKey }}"
-            - "--primary-storage-s3-secret=/etc/platforma/secrets/primary-storage-s3/{{ .Values.primaryStorage.s3.secretRef.secretKey }}"
+            - "--primary-storage-s3-key=/etc/platforma/secrets/primary-storage-s3/{{ required "A keyKey for the primary storage S3 secret is required (.Values.primaryStorage.s3.secretRef.keyKey)" .Values.primaryStorage.s3.secretRef.keyKey }}"
+            - "--primary-storage-s3-secret=/etc/platforma/secrets/primary-storage-s3/{{ required "A secretKey for the primary storage S3 secret is required (.Values.primaryStorage.s3.secretRef.secretKey)" .Values.primaryStorage.s3.secretRef.secretKey }}"
             {{- else }}
             {{- if .Values.primaryStorage.s3.key }}
             - "--primary-storage-s3-key={{ .Values.primaryStorage.s3.key }}"
@@ -169,8 +169,8 @@ spec:
             - "--data-library-s3-region={{ .id }}={{ .region }}"
             {{- end }}
             {{- if .secretRef.enabled }}
-            - "--data-library-s3-key={{ .id }}=/etc/platforma/secrets/datalib-s3/{{ .id }}/{{ .secretRef.keyKey }}"
-            - "--data-library-s3-secret={{ .id }}=/etc/platforma/secrets/datalib-s3/{{ .id }}/{{ .secretRef.secretKey }}"
+            - "--data-library-s3-key={{ .id }}=/etc/platforma/secrets/datalib-s3/{{ .id }}/{{ required (printf "A keyKey for the data library S3 secret is required (dataLibrary.s3[%s].secretRef.keyKey)" .id) .secretRef.keyKey }}"
+            - "--data-library-s3-secret={{ .id }}=/etc/platforma/secrets/datalib-s3/{{ .id }}/{{ required (printf "A secretKey for the data library S3 secret is required (dataLibrary.s3[%s].secretRef.secretKey)" .id) .secretRef.secretKey }}"
             {{- else }}
             {{- if .key }}
             - "--data-library-s3-key={{ .id }}={{ .key }}"
@@ -240,7 +240,7 @@ spec:
             {{- else }}
             {{- if .Values.authOptions.htpasswd.enabled }}
             {{- if .Values.authOptions.htpasswd.secretRef.enabled }}
-            - "--auth-htpasswd=/etc/platforma/secrets/htpasswd/{{ .Values.authOptions.htpasswd.secretRef.key }}"
+            - "--auth-htpasswd=/etc/platforma/secrets/htpasswd/{{ required "A key for the htpasswd secret is required (.Values.authOptions.htpasswd.secretRef.key)" .Values.authOptions.htpasswd.secretRef.key }}"
             {{- else }}
             - "--auth-htpasswd={{ .Values.authOptions.htpasswd.path }}"
             {{- end }}
@@ -251,21 +251,21 @@ spec:
             - "--auth-ldap-dn={{ .Values.authOptions.ldap.dn }}"
             {{- end }}
             {{- if .Values.authOptions.ldap.searchPassword.secretRef.enabled }}
-            - "--auth-ldap-search-password=/etc/platforma/secrets/ldap-search-password/{{ .Values.authOptions.ldap.searchPassword.secretRef.key }}"
+            - "--auth-ldap-search-password=/etc/platforma/secrets/ldap-search-password/{{ required "A key for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.secretRef.key)" .Values.authOptions.ldap.searchPassword.secretRef.key }}"
             {{- end }}
             {{- if .Values.authOptions.ldap.startTls }}
             - "--auth-ldap-start-tls"
             {{- end }}
             {{- if .Values.authOptions.ldap.tls.enabled }}
             {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
-            - "--auth-ldap-tls=/etc/platforma/secrets/ldap-client/{{ .Values.authOptions.ldap.tls.client.secretRef.certKey }},/etc/platforma/secrets/ldap-client/{{ .Values.authOptions.ldap.tls.client.secretRef.keyKey }}"
+            - "--auth-ldap-tls=/etc/platforma/secrets/ldap-client/{{ required "A certKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.certKey)" .Values.authOptions.ldap.tls.client.secretRef.certKey }},/etc/platforma/secrets/ldap-client/{{ required "A keyKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.keyKey)" .Values.authOptions.ldap.tls.client.secretRef.keyKey }}"
             {{- else if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
             - "--auth-ldap-tls=/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.certKey }},/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.keyKey }}"
             {{- else if and .Values.authOptions.ldap.tls.client.certPath .Values.authOptions.ldap.tls.client.keyPath }}
             - "--auth-ldap-tls={{ .Values.authOptions.ldap.tls.client.certPath }},{{ .Values.authOptions.ldap.tls.client.keyPath }}"
             {{- end }}
             {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
-            - "--auth-ldap-cas=/etc/platforma/secrets/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.secretRef.key }}"
+            - "--auth-ldap-cas=/etc/platforma/secrets/ldap-ca/{{ required "A key for the LDAP CA certificate secret is required (.Values.authOptions.ldap.tls.ca.secretRef.key)" .Values.authOptions.ldap.tls.ca.secretRef.key }}"
             {{- else if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
             - "--auth-ldap-cas=/etc/platforma/cm/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.configMapRef.key }}"
             {{- else if .Values.authOptions.ldap.tls.ca.path }}
@@ -273,7 +273,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
-            - "--auth-ldap-root-cas=/etc/platforma/secrets/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.secretRef.key }}"
+            - "--auth-ldap-root-cas=/etc/platforma/secrets/ldap-root-cas/{{ required "A key for the LDAP root CA certificates secret is required (.Values.authOptions.ldap.rootCas.secretRef.key)" .Values.authOptions.ldap.rootCas.secretRef.key }}"
             {{- else if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
             - "--auth-ldap-root-cas=/etc/platforma/cm/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.configMapRef.key }}"
             {{- else if .Values.authOptions.ldap.rootCas.path }}
@@ -514,35 +514,35 @@ spec:
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
         - name: license-secret
           secret:
-            secretName: {{ .Values.mainOptions.licenseFile.secretRef.name }}
+            secretName: {{ required "A name for the license file secret is required (.Values.mainOptions.licenseFile.secretRef.name)" .Values.mainOptions.licenseFile.secretRef.name }}
         {{- end -}}
         {{- if .Values.primaryStorage.s3.secretRef.enabled }}
         - name: primary-storage-s3-secret
           secret:
-            secretName: {{ .Values.primaryStorage.s3.secretRef.name }}
+            secretName: {{ required "A name for the primary storage S3 secret is required (.Values.primaryStorage.s3.secretRef.name)" .Values.primaryStorage.s3.secretRef.name }}
         {{- end -}}
         {{- range .Values.dataLibrary.s3 }}
         {{- if and .enabled .secretRef.enabled }}
         - name: datalib-s3-{{ .id }}
           secret:
-            secretName: {{ .secretRef.name }}
+            secretName: {{ required (printf "A name for the data library S3 secret is required (dataLibrary.s3[%s].secretRef.name)" .id) .secretRef.name }}
         {{- end -}}
         {{- end -}}
         {{- if .Values.authOptions.htpasswd.secretRef.enabled }}
         - name: htpasswd-secret
           secret:
-            secretName: {{ .Values.authOptions.htpasswd.secretRef.name }}
+            secretName: {{ required "A name for the htpasswd secret is required (.Values.authOptions.htpasswd.secretRef.name)" .Values.authOptions.htpasswd.secretRef.name }}
         {{- end }}
         {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.searchPassword.secretRef.enabled }}
         - name: ldap-search-password-secret
           secret:
-            secretName: {{ .Values.authOptions.ldap.searchPassword.secretRef.name }}
+            secretName: {{ required "A name for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.secretRef.name)" .Values.authOptions.ldap.searchPassword.secretRef.name }}
         {{- end }}
         {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled }}
         {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
         - name: ldap-client-secret
           secret:
-            secretName: {{ .Values.authOptions.ldap.tls.client.secretRef.name }}
+            secretName: {{ required "A name for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.name)" .Values.authOptions.ldap.tls.client.secretRef.name }}
         {{- end }}
         {{- if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
         - name: ldap-client-cm
@@ -552,7 +552,7 @@ spec:
         {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
         - name: ldap-ca-secret
           secret:
-            secretName: {{ .Values.authOptions.ldap.tls.ca.secretRef.name }}
+            secretName: {{ required "A name for the LDAP CA certificate secret is required (.Values.authOptions.ldap.tls.ca.secretRef.name)" .Values.authOptions.ldap.tls.ca.secretRef.name }}
         {{- end }}
         {{- if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
         - name: ldap-ca-cm
@@ -564,7 +564,7 @@ spec:
         {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
         - name: ldap-root-cas-secret
           secret:
-            secretName: {{ .Values.authOptions.ldap.rootCas.secretRef.name }}
+            secretName: {{ required "A name for the LDAP root CA certificates secret is required (.Values.authOptions.ldap.rootCas.secretRef.name)" .Values.authOptions.ldap.rootCas.secretRef.name }}
         {{- end }}
         {{- if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
         - name: ldap-root-cas-cm
