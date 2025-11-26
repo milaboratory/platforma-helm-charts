@@ -354,7 +354,9 @@ This Helm chart provides flexible options for both primary and data library stor
 
 ### Primary Storage
 
-Primary storage is used for long-term storage of analysis results. Only one primary storage provider can be enabled at a time.
+Primary storage is used for long-term storage of analysis results. **Exactly one primary storage provider MUST be enabled** in your values file. All options are disabled by default to avoid conflicts when merging values.
+
+**Important:** You must explicitly enable one of the following options (`s3`, `fs`, or `gcs`) in your values file. The chart will fail validation if none or multiple are enabled.
 
 - **S3**: To use an S3-compatible object store, configure the `primaryStorage.s3` section. You can provide credentials directly or reference a Kubernetes secret.
 - **GCS**: To use Google Cloud Storage, configure `primaryStorage.gcs`, specifying the bucket URL, project ID, and service account.
@@ -408,7 +410,23 @@ env:
 
 #### Primary Storage validation (important)
 
-Exactly one of `primaryStorage.s3.enabled`, `primaryStorage.fs.enabled`, or `primaryStorage.gcs.enabled` must be true. The chart validates this at render time and will fail if none or multiple are enabled.
+**Exactly one of `primaryStorage.s3.enabled`, `primaryStorage.fs.enabled`, or `primaryStorage.gcs.enabled` must be `true`.** 
+
+All primary storage options are disabled by default in `values.yaml`. You **must** explicitly enable one option in your values file. The chart validates this at render time and will fail if:
+- None are enabled (all are `false`)
+- Multiple are enabled (more than one is `true`)
+
+**Example:** When using S3, make sure to explicitly disable the other options:
+```yaml
+primaryStorage:
+  s3:
+    enabled: true
+    url: "s3://my-bucket/primary/"
+  fs:
+    enabled: false
+  gcs:
+    enabled: false
+```
 
 ### Data Libraries
 
