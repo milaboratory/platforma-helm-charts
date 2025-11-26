@@ -1,5 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.2.0] - 2025-11-26
+### Miscellaneous Tasks
+
+- Pass ldap search password as env variable ([`e122812`](https://github.com/milaboratory/platforma-helm-charts/commit/e122812166708028b97535477664aeb776889cd8))
+
 ## [v2.1.9] - 2025-11-26
 ### Miscellaneous Tasks
 
