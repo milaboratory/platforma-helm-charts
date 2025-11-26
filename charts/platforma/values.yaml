@@ -390,7 +390,9 @@ gcp:
   # projectId: ""
 
 # -- Primary Storage Options
-# NOTE: Only one primary storage can be enabled at a time (s3, fs, or gcs)
+# NOTE: Exactly one primary storage MUST be enabled (s3, fs, or gcs).
+# You must explicitly enable one of the options below in your values file.
+# All options are disabled by default to avoid conflicts when merging values.
 primaryStorage:
   # -- S3 primary storage configuration
   s3:
@@ -409,7 +411,7 @@ primaryStorage:
       secretKey: "secret-key" # Key in secret for secret key
   # -- Filesystem storage option
   fs:
-    enabled: true
+    enabled: false
     url: ""
     # Auto-generate URL from listen settings
     autoUrl: false

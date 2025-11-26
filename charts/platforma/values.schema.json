@@ -391,12 +391,51 @@
   },
   "allOf": [
     {
-      "oneOf": [
-        { "properties": { "primaryStorage": { "properties": { "s3": { "properties": { "enabled": { "const": true } } } } } } },
-        { "properties": { "primaryStorage": { "properties": { "fs": { "properties": { "enabled": { "const": true } } } } } } },
-        { "properties": { "primaryStorage": { "properties": { "gcs": { "properties": { "enabled": { "const": true } } } } } } }
+      "anyOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "primaryStorage": {
+                  "properties": {
+                    "s3": { "properties": { "enabled": { "const": true } } }
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "primaryStorage": {
+                  "properties": {
+                    "fs": { "properties": { "enabled": { "const": true } } }
+                  }
+                }
+              }
+            },
+            {
+              "properties": {
+                "primaryStorage": {
+                  "properties": {
+                    "gcs": { "properties": { "enabled": { "const": true } } }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "properties": {
+            "primaryStorage": {
+              "properties": {
+                "s3": { "properties": { "enabled": { "const": false } } },
+                "fs": { "properties": { "enabled": { "const": false } } },
+                "gcs": { "properties": { "enabled": { "const": false } } }
+              }
+            }
+          }
+        }
       ],
-      "errorMessage": "Exactly one primaryStorage must be enabled (s3, fs, or gcs)."
+      "errorMessage": "Exactly one primaryStorage must be enabled (s3, fs, or gcs). Note: All are disabled by default - you must enable one in your values file."
     },
     {
       "if": {
