@@ -1,5 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.1.9] - 2025-11-26
+### Miscellaneous Tasks
+
+- Fail if secreRef is enabled by name is empty ([`477698a`](https://github.com/milaboratory/platforma-helm-charts/commit/477698aceede30fad5dbafc49b00d5e3f77818d6))
+- Add ldap user search password ([`ef374fa`](https://github.com/milaboratory/platforma-helm-charts/commit/ef374fa511e635a0a91737d9243ca60cd6c255f6))
+
 ## [v2.1.8] - 2025-11-26
 ### Miscellaneous Tasks
 
