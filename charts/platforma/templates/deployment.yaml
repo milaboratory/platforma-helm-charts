@@ -250,9 +250,6 @@ spec:
             {{- if .Values.authOptions.ldap.dn }}
             - "--auth-ldap-dn={{ .Values.authOptions.ldap.dn }}"
             {{- end }}
-            {{- if .Values.authOptions.ldap.searchPassword.secretRef.enabled }}
-            - "--auth-ldap-search-password=/etc/platforma/secrets/ldap-search-password/{{ required "A key for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.secretRef.key)" .Values.authOptions.ldap.searchPassword.secretRef.key }}"
-            {{- end }}
             {{- if .Values.authOptions.ldap.startTls }}
             - "--auth-ldap-start-tls"
             {{- end }}
@@ -355,6 +352,13 @@ spec:
                   optional: {{ .secretKeyRef.optional }}
                   {{- end }}
             {{- end }}
+            {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.searchPassword.envRef.enabled }}
+            - name: PL_AUTH_LDAP_SEARCH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "A name for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.envRef.name)" .Values.authOptions.ldap.searchPassword.envRef.name }}
+                  key: {{ required "A key for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.envRef.key)" .Values.authOptions.ldap.searchPassword.envRef.key }}
+            {{- end }}
             {{- range .Values.env.configMapVariables }}
             - name: {{ .name }}
               valueFrom:
@@ -454,11 +458,6 @@ spec:
               mountPath: "/etc/platforma/secrets/htpasswd"
               readOnly: true
             {{- end }}
-            {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.searchPassword.secretRef.enabled }}
-            - name: ldap-search-password-secret
-              mountPath: "/etc/platforma/secrets/ldap-search-password"
-              readOnly: true
-            {{- end }}
             {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled }}
             {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
             - name: ldap-client-secret
@@ -532,11 +531,6 @@ spec:
         - name: htpasswd-secret
           secret:
             secretName: {{ required "A name for the htpasswd secret is required (.Values.authOptions.htpasswd.secretRef.name)" .Values.authOptions.htpasswd.secretRef.name }}
-        {{- end }}
-        {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.searchPassword.secretRef.enabled }}
-        - name: ldap-search-password-secret
-          secret:
-            secretName: {{ required "A name for the LDAP search password secret is required (.Values.authOptions.ldap.searchPassword.secretRef.name)" .Values.authOptions.ldap.searchPassword.secretRef.name }}
         {{- end }}
         {{- if and .Values.authOptions.ldap.enabled .Values.authOptions.ldap.tls.enabled }}
         {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}

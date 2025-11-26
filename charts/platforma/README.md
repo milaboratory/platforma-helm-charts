@@ -292,9 +292,11 @@ If your LDAP server requires clients to present a certificate, you can configure
 
 #### LDAP Search Password
 
-If your LDAP server requires a password for bind operations when searching for users, you can provide it via a Kubernetes Secret.
+If your LDAP server requires a password for bind operations when searching for users, you can provide it via a Kubernetes Secret as an environment variable, or pass it directly via CLI arguments.
 
-**Example: Search Password from a Secret**
+**Option 1: Search Password from a Secret (as environment variable)**
+
+Provide the password as an environment variable `PL_AUTH_LDAP_SEARCH_PASSWORD`:
 
 1.  Create the Secret:
     ```sh
@@ -310,13 +312,30 @@ If your LDAP server requires a password for bind operations when searching for u
         server: "ldap://my-ldap-server:389"
         dn: "cn=admin,dc=example,dc=com"
         searchPassword:
-          secretRef:
+          envRef:
             enabled: true
             name: "ldap-password-secret"
             key: "password"
     ```
 
-The password will be mounted as a file at `/etc/platforma/secrets/ldap-search-password/password` and passed to the application via the `--auth-ldap-search-password` CLI argument.
+The password will be available as the `PL_AUTH_LDAP_SEARCH_PASSWORD` environment variable.
+
+**Option 2: Pass Password via CLI Arguments**
+
+Alternatively, you can pass the password directly via the `--auth-ldap-search-password` CLI argument in `extraArgs`:
+
+```yaml
+authOptions:
+  ldap:
+    enabled: true
+    server: "ldap://my-ldap-server:389"
+    dn: "cn=admin,dc=example,dc=com"
+
+extraArgs:
+  - "--auth-ldap-search-password=your-password"
+```
+
+**Note:** For security reasons, prefer using the environment variable option (Option 1) over passing the password directly in `extraArgs`.
 
 #### System Root CA Certificates
 
