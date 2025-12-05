@@ -290,6 +290,7 @@ sidecarContainers: []
 
 # -- Main Options (--version, --full-version, --only-verify-config, --get-queue-limits)
 mainOptions:
+  useHTTP: false # Use HTTP instead of gRPC for the main service. Not fully supported yet.
   # -- License file configuration
   licenseFile:
     enabled: false

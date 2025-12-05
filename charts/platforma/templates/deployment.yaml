@@ -314,6 +314,9 @@ spec:
             {{- range .Values.extraArgs }}
             - {{ . | quote }}
             {{- end }}
+            {{- if .Values.mainOptions.useHTTP }}
+            - "--use-http"
+            {{- end }}
           ports:
             - name: grpc
               containerPort: {{ .Values.listenOptions.port }}
