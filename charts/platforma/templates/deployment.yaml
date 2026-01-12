@@ -287,9 +287,16 @@ spec:
             - "--debug-enabled"
             - "--debug-ip={{ .Values.listenOptions.ip }}"
             - "--debug-port={{ .Values.debug.port }}"
+            {{- end }}
+            # Docker Options
             {{- if .Values.docker.enabled }}
             {{- $dockerResources := fromYaml (include "platforma.dockerResources" .) }}
             - "--runner-enable-docker"
+            {{- if $dockerResources.limits.cpu }}
+            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" $dockerResources.limits.cpu }}"
+            {{- end }}
+            {{- if $dockerResources.limits.memory }}
+            - "--runner-local-ram={{ $dockerResources.limits.memory }}"
             {{- end }}
             {{- end }}
             {{- if .Values.gcp.gar }}
