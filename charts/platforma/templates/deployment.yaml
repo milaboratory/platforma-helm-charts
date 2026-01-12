@@ -65,16 +65,14 @@ spec:
             {{- end }}
             {{- end }}
             # Local Storage
-            {{- if .Values.persistence.mainRoot.enabled }}
+            {{- /* mainRoot is always created */ -}}
             - "--main-root={{ .Values.persistence.mainRoot.mountPath }}"
-            {{- else }}
+            {{- /* workDir and packagesDir are subfolders within mainRoot */ -}}
+            - "--work-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.workDirName }}"
+            - "--packages-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.packagesDirName }}"
+            {{- /* dbDir can optionally be a separate PVC */ -}}
             {{- if .Values.persistence.dbDir.enabled }}
             - "--db-dir={{ .Values.persistence.dbDir.mountPath }}"
-            {{- end }}
-            {{- if .Values.persistence.workDir.enabled }}
-            - "--work-dir={{ .Values.persistence.workDir.mountPath }}/{{ .Values.persistence.workDir.workDirName }}"
-            - "--packages-dir={{ .Values.persistence.workDir.mountPath }}/{{ .Values.persistence.workDir.packagesDirName }}"
-            {{- end }}
             {{- end }}
             # Listen Options
             - "--listen-address={{ .Values.listenOptions.ip }}"
@@ -302,9 +300,13 @@ spec:
             - "--assets-registry-url={{ .Values.assetsRegistry }}"
             {{- end -}}
             {{- if .Values.k8s.enabled }}
-            - "--k8s-pvc-name={{ .Values.persistence.workDir.existingClaim }}"
-            - "--k8s-work-dir-name={{ .Values.persistence.workDir.workDirName }}"
-            - "--k8s-storage-location={{ .Values.persistence.workDir.mountPath }}"
+            {{- if .Values.persistence.mainRoot.existingClaim }}
+            - "--k8s-pvc-name={{ .Values.persistence.mainRoot.existingClaim }}"
+            {{- else }}
+            - "--k8s-pvc-name={{ printf "%s-main-root" (include "platforma.fullname" .) }}"
+            {{- end }}
+            - "--k8s-work-dir-name={{ .Values.persistence.mainRoot.workDirName }}"
+            - "--k8s-storage-location={{ .Values.persistence.mainRoot.mountPath }}"
             {{- end -}}
             # Extra Arguments
             {{- range .Values.extraArgs }}
@@ -418,10 +420,6 @@ spec:
           # -- A list of volume mounts for the application container.
           # This is automatically populated based on your persistence settings.
           volumeMounts:
-            {{- if .Values.persistence.workDir.enabled }}
-            - name: {{ .Values.persistence.workDir.name }}
-              mountPath: {{ .Values.persistence.workDir.mountPath }}
-            {{- end }}
             {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
             - name: google-batch-custom-job-template-cm
               mountPath: "/etc/platforma/templates/google-batch-custom-job-template-cm"
@@ -491,11 +489,6 @@ spec:
       # -- Volumes for the pod.
       # This is automatically populated based on your persistence settings.
       volumes:
-        {{- if .Values.persistence.workDir.enabled }}
-        - name: {{ .Values.persistence.workDir.name }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.workDir.existingClaim | default (printf "%s-workdirs" (include "platforma.fullname" .)) }}
-        {{- end -}}
         {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
         - name: google-batch-custom-job-template-cm
           configMap:

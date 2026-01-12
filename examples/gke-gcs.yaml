@@ -26,7 +26,7 @@ persistence:
     storageClass: "standard-rwo"
     mountPath: /data/platforma-data/rocksdb
   workDir:
-    enabled: false
+    enabled: true
     createPvc: true
     accessMode: ReadWriteOnce
     size: 50Gi
