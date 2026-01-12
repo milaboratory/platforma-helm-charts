@@ -71,16 +71,9 @@ spec:
             {{- if .Values.persistence.dbDir.enabled }}
             - "--db-dir={{ .Values.persistence.dbDir.mountPath }}"
             {{- end }}
-            {{- if .Values.googleBatch.enabled }}
-            - "--work-dir={{ .Values.googleBatch.volumes.mountPath }}/{{ .Values.googleBatch.volumes.workDirName }}"
-            - "--packages-dir={{ .Values.googleBatch.volumes.mountPath }}/{{ .Values.googleBatch.volumes.packagesDirName }}"
-            {{- else }}
             {{- if .Values.persistence.workDir.enabled }}
-            - "--work-dir={{ .Values.persistence.workDir.mountPath }}"
-            {{- end }}
-            {{- if .Values.persistence.packagesDir.enabled }}
-            - "--packages-dir={{ .Values.persistence.packagesDir.mountPath }}"
-            {{- end }}
+            - "--work-dir={{ .Values.persistence.workDir.mountPath }}/{{ .Values.persistence.workDir.workDirName }}"
+            - "--packages-dir={{ .Values.persistence.workDir.mountPath }}/{{ .Values.persistence.workDir.packagesDirName }}"
             {{- end }}
             {{- end }}
             # Listen Options
@@ -296,12 +289,10 @@ spec:
             - "--debug-enabled"
             - "--debug-ip={{ .Values.listenOptions.ip }}"
             - "--debug-port={{ .Values.debug.port }}"
-            {{- end }}
             {{- if .Values.docker.enabled }}
             {{- $dockerResources := fromYaml (include "platforma.dockerResources" .) }}
             - "--runner-enable-docker"
-            - "--runner-local-cpu={{ include "platforma.parseCpuToWholeCpus" $dockerResources.limits.cpu }}"
-            - "--runner-local-ram={{ $dockerResources.limits.memory }}"
+            {{- end }}
             {{- end }}
             {{- if .Values.gcp.gar }}
             - "--google-artifact-registry={{ .Values.gcp.gar }}"
@@ -309,6 +300,11 @@ spec:
             {{- end -}}
             {{- if .Values.assetsRegistry }}
             - "--assets-registry-url={{ .Values.assetsRegistry }}"
+            {{- end -}}
+            {{- if .Values.k8s.enabled }}
+            - "--k8s-pvc-name={{ .Values.persistence.workDir.existingClaim }}"
+            - "--k8s-work-dir-name={{ .Values.persistence.workDir.workDirName }}"
+            - "--k8s-storage-location={{ .Values.persistence.workDir.mountPath }}"
             {{- end -}}
             # Extra Arguments
             {{- range .Values.extraArgs }}
@@ -422,9 +418,9 @@ spec:
           # -- A list of volume mounts for the application container.
           # This is automatically populated based on your persistence settings.
           volumeMounts:
-            {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
-            - name: {{ .Values.googleBatch.volumes.name }}
-              mountPath: {{ .Values.googleBatch.volumes.mountPath }}
+            {{- if .Values.persistence.workDir.enabled }}
+            - name: {{ .Values.persistence.workDir.name }}
+              mountPath: {{ .Values.persistence.workDir.mountPath }}
             {{- end }}
             {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
             - name: google-batch-custom-job-template-cm
@@ -495,10 +491,10 @@ spec:
       # -- Volumes for the pod.
       # This is automatically populated based on your persistence settings.
       volumes:
-        {{- if and .Values.googleBatch.enabled .Values.googleBatch.volumes.enabled }}
-        - name: {{ .Values.googleBatch.volumes.name }}
+        {{- if .Values.persistence.workDir.enabled }}
+        - name: {{ .Values.persistence.workDir.name }}
           persistentVolumeClaim:
-            claimName: {{ .Values.googleBatch.volumes.existingClaim | default (printf "%s-google-batch" (include "platforma.fullname" .)) }}
+            claimName: {{ .Values.persistence.workDir.existingClaim | default (printf "%s-workdirs" (include "platforma.fullname" .)) }}
         {{- end -}}
         {{- if and .Values.googleBatch.enabled .Values.googleBatch.customJobTemplate.enabled .Values.googleBatch.customJobTemplate.configMap.name }}
         - name: google-batch-custom-job-template-cm
