@@ -67,18 +67,16 @@ Returns the GCP service account to use, preferring explicit fields and falling b
 {{- end -}}
 
 # Gathers all *enabled* PVC configurations.
+# Note: workDir is handled separately in deployment.yaml as it uses shared NFS storage.
 {{- define "platforma.allPvcs" -}}
   {{- $allPvcs := dict -}}
-  {{- if and .Values.persistence.mainRoot.enabled (not .Values.googleBatch.enabled) -}}
+  {{- if .Values.persistence.mainRoot.enabled -}}
     {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
   {{- else -}}
     {{- if .Values.persistence.dbDir.enabled -}}
       {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
     {{- end -}}
-    {{- if and .Values.persistence.workDir.enabled (not .Values.googleBatch.enabled) -}}
-      {{- $_ := set $allPvcs "work" .Values.persistence.workDir -}}
-    {{- end -}}
-    {{- if and .Values.persistence.packagesDir.enabled (not .Values.googleBatch.enabled) -}}
+    {{- if .Values.persistence.packagesDir.enabled -}}
       {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
     {{- end -}}
   {{- end -}}
@@ -136,15 +134,13 @@ This helper enforces:
 - If persistence section (mainRoot, dbDir, workDir, packagesDir), has non-empty existingClaim, new claim will not be created
 */}}
 {{- define "platforma.validatePersistence" -}}
-  {{- if not .Values.googleBatch.enabled -}}
-    {{- $p := .Values.persistence -}}
-    {{- if not $p.mainRoot.enabled -}}
-      {{- $db := $p.dbDir.enabled | default false -}}
-      {{- $work := $p.workDir.enabled | default false -}}
-      {{- $pkg := $p.packagesDir.enabled | default false -}}
-      {{- if not (or $db $work $pkg) -}}
-        {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
-      {{- end -}}
+  {{- $p := .Values.persistence -}}
+  {{- if not $p.mainRoot.enabled -}}
+    {{- $db := $p.dbDir.enabled | default false -}}
+    {{- $work := $p.workDir.enabled | default false -}}
+    {{- $pkg := $p.packagesDir.enabled | default false -}}
+    {{- if not (or $db $work $pkg) -}}
+      {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
@@ -175,7 +171,6 @@ volumeMount definition with the correct name and mount path.
   mountPath: {{ $pvc.mountPath }}
   {{- end -}}
 {{- end -}}
-
 {{/*
 Constructs a list of shared volumes that should be mounted into additional pods (i.e. Docker-in-Docker pod)
 */}}
