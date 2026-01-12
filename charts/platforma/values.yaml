@@ -302,19 +302,22 @@ mainOptions:
 
 # -- Local Storage Options (using PVCs)
 persistence:
-  # -- Configuration for the main data volume (simple setup).
-  # If enabled, this creates a single PVC for all application data.
-  # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
+  # -- Configuration for the main root volume.
+  # This PVC is always created and serves as the base directory for workDir and packagesDir.
   mainRoot:
-    enabled: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
     size: 500Gi
     # storageClass: "standard"
     mountPath: /data/main-root
-  # -- Configuration for the database volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
+    # -- Name of the work directory subfolder within mainRoot.
+    workDirName: "work"
+    # -- Name of the packages directory subfolder within mainRoot.
+    packagesDirName: "packages"
+  # -- Configuration for the database volume (optional separate setup).
+  # If enabled, creates a separate PVC for the database directory.
+  # If disabled, the database will be stored within mainRoot.
   dbDir:
     enabled: false
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
@@ -323,29 +326,6 @@ persistence:
     size: 20Gi
     # storageClass: "standard"
     mountPath: /data/rocksdb
-  # -- Work directory configuration for NFS setup in Kubernetes clusters.
-  # This provides shared storage for work and packages directories accessible by distributed jobs.
-  # Only used if `persistence.mainRoot.enabled` is false.
-  workDir:
-    enabled: true
-    name: "work-storage"
-    mountPath: /data/platforma-data/work
-    packagesDirName: "packages"
-    workDirName: "work"
-    # -- Use an existing PVC for work storage. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    storageClass: ""
-    size: "1Ti"
-  # -- Configuration for the packages volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
-  packagesDir:
-    enabled: false
-    # -- Use an existing PVC for the packages directory. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    accessMode: ReadWriteOnce
-    size: 50Gi
-    # storageClass: "standard"
-    mountPath: /data/platforma-data/packages
 
 # -- Listen Options (--listen-port, --listen-http-port, --listen-address, TLS options)
 listenOptions:

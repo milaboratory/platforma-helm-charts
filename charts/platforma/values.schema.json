@@ -99,16 +99,11 @@
         "mainRoot": {
           "type": "object",
           "additionalProperties": true,
+          "description": "Main root volume configuration. This PVC is always created and serves as the base directory for workDir and packagesDir.",
           "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable single PVC for all data"
-            },
-            "createPvc": {
-              "type": "boolean"
-            },
             "existingClaim": {
-              "type": "string"
+              "type": "string",
+              "description": "Use an existing PVC for the main root directory. If specified, size and storageClass are ignored."
             },
             "accessMode": {
               "type": "string",
@@ -118,57 +113,36 @@
               ]
             },
             "size": {
-              "type": "string"
+              "type": "string",
+              "description": "Size of the PVC to create. Required if existingClaim is not specified."
             },
             "storageClass": {
-              "type": "string"
+              "type": "string",
+              "description": "Storage class for the PVC"
             },
             "mountPath": {
-              "type": "string"
+              "type": "string",
+              "description": "Mount path for the main root volume"
+            },
+            "workDirName": {
+              "type": "string",
+              "description": "Name of the work directory subfolder within mainRoot"
+            },
+            "packagesDirName": {
+              "type": "string",
+              "description": "Name of the packages directory subfolder within mainRoot"
             }
           },
-          "allOf": [
+          "anyOf": [
             {
-              "if": {
-                "properties": {
-                  "enabled": {
-                    "const": true
-                  }
-                }
-              },
-              "then": {
-                "anyOf": [
-                  {
-                    "required": [
-                      "existingClaim"
-                    ]
-                  },
-                  {
-                    "properties": {
-                      "createPvc": {
-                        "const": true
-                      }
-                    },
-                    "required": [
-                      "createPvc"
-                    ]
-                  }
-                ]
-              }
+              "required": [
+                "existingClaim"
+              ]
             },
             {
-              "if": {
-                "properties": {
-                  "createPvc": {
-                    "const": true
-                  }
-                }
-              },
-              "then": {
-                "required": [
-                  "size"
-                ]
-              }
+              "required": [
+                "size"
+              ]
             }
           ]
         },
@@ -246,222 +220,8 @@
               }
             }
           ]
-        },
-        "workDir": {
-          "type": "object",
-          "additionalProperties": true,
-          "description": "Work directory configuration for NFS setup in Kubernetes clusters",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "name": {
-              "type": "string"
-            },
-            "mountPath": {
-              "type": "string"
-            },
-            "workDirName": {
-              "type": "string"
-            },
-            "packagesDirName": {
-              "type": "string"
-            },
-            "existingClaim": {
-              "type": "string"
-            },
-            "storageClass": {
-              "type": "string"
-            },
-            "accessMode": {
-              "type": "string",
-              "enum": [
-                "ReadWriteOnce",
-                "ReadWriteMany"
-              ]
-            },
-            "size": {
-              "type": "string"
-            }
-          },
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "enabled": {
-                    "const": true
-                  }
-                }
-              },
-              "then": {
-                "anyOf": [
-                  {
-                    "required": [
-                      "existingClaim"
-                    ]
-                  },
-                  {
-                    "required": [
-                      "size"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "packagesDir": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "createPvc": {
-              "type": "boolean"
-            },
-            "existingClaim": {
-              "type": "string"
-            },
-            "accessMode": {
-              "type": "string",
-              "enum": [
-                "ReadWriteOnce",
-                "ReadWriteMany"
-              ]
-            },
-            "size": {
-              "type": "string"
-            },
-            "storageClass": {
-              "type": "string"
-            },
-            "mountPath": {
-              "type": "string"
-            }
-          },
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "enabled": {
-                    "const": true
-                  }
-                }
-              },
-              "then": {
-                "anyOf": [
-                  {
-                    "required": [
-                      "existingClaim"
-                    ]
-                  },
-                  {
-                    "properties": {
-                      "createPvc": {
-                        "const": true
-                      }
-                    },
-                    "required": [
-                      "createPvc"
-                    ]
-                  }
-                ]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "createPvc": {
-                    "const": true
-                  }
-                }
-              },
-              "then": {
-                "required": [
-                  "size"
-                ]
-              }
-            }
-          ]
         }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "mainRoot": {
-                "properties": {
-                  "enabled": {
-                    "const": false
-                  }
-                }
-              }
-            }
-          },
-          "then": {
-            "anyOf": [
-              {
-                "properties": {
-                  "dbDir": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    },
-                    "required": [
-                      "enabled"
-                    ]
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "workDir": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    },
-                    "required": [
-                      "enabled"
-                    ]
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "packagesDir": {
-                    "properties": {
-                      "enabled": {
-                        "const": true
-                      }
-                    },
-                    "required": [
-                      "enabled"
-                    ]
-                  }
-                }
-              }
-            ],
-            "errorMessage": "persistence.mainRoot.enabled is false, but none of dbDir/workDir/packagesDir are enabled"
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "mainRoot": {
-                "properties": {
-                  "enabled": {
-                    "const": true
-                  }
-                }
-              }
-            }
-          },
-          "then": {}
-        }
-      ]
+      }
     },
     "googleBatch": {
       "type": "object",

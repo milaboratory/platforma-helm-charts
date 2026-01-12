@@ -67,18 +67,14 @@ Returns the GCP service account to use, preferring explicit fields and falling b
 {{- end -}}
 
 # Gathers all *enabled* PVC configurations.
-# Note: workDir is handled separately in deployment.yaml as it uses shared NFS storage.
+# Note: mainRoot is always included. workDir and packagesDir are subfolders within mainRoot.
 {{- define "platforma.allPvcs" -}}
   {{- $allPvcs := dict -}}
-  {{- if .Values.persistence.mainRoot.enabled -}}
-    {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
-  {{- else -}}
-    {{- if .Values.persistence.dbDir.enabled -}}
-      {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
-    {{- end -}}
-    {{- if .Values.persistence.packagesDir.enabled -}}
-      {{- $_ := set $allPvcs "packages" .Values.persistence.packagesDir -}}
-    {{- end -}}
+  {{- /* mainRoot is always created */ -}}
+  {{- $_ := set $allPvcs "main-root" .Values.persistence.mainRoot -}}
+  {{- /* dbDir can optionally be a separate PVC */ -}}
+  {{- if .Values.persistence.dbDir.enabled -}}
+    {{- $_ := set $allPvcs "db" .Values.persistence.dbDir -}}
   {{- end -}}
 
   {{- if .Values.logging.persistence.enabled -}}
@@ -130,19 +126,12 @@ Returns the GCP service account to use, preferring explicit fields and falling b
 {{/*
 Validate Persistence Configuration
 This helper enforces:
-- If mainRoot.enabled is false, at least one of dbDir/workDir/packagesDir must be enabled
-- If persistence section (mainRoot, dbDir, workDir, packagesDir), has non-empty existingClaim, new claim will not be created
+- mainRoot is always enabled (always created)
+- workDir and packagesDir are subfolders within mainRoot
+- dbDir can optionally be a separate PVC
 */}}
 {{- define "platforma.validatePersistence" -}}
-  {{- $p := .Values.persistence -}}
-  {{- if not $p.mainRoot.enabled -}}
-    {{- $db := $p.dbDir.enabled | default false -}}
-    {{- $work := $p.workDir.enabled | default false -}}
-    {{- $pkg := $p.packagesDir.enabled | default false -}}
-    {{- if not (or $db $work $pkg) -}}
-      {{- fail "Persistence misconfiguration: persistence.mainRoot.enabled is false, but none of persistence.dbDir/workDir/packagesDir are enabled." -}}
-    {{- end -}}
-  {{- end -}}
+  {{- /* mainRoot is always enabled, no validation needed */ -}}
 {{- end -}}
 
 {{/*
@@ -177,7 +166,7 @@ Constructs a list of shared volumes that should be mounted into additional pods 
 {{- define "platforma.sharedVolumes" -}}
   {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
   {{- range $key, $pvc := $allPvcs }}
-    {{- if or (eq $key "main-root") (eq $key "work") }}
+    {{- if eq $key "main-root" }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   persistentVolumeClaim:
     claimName: {{ $pvc.existingClaim | default (printf "%s-%s" (include "platforma.fullname" $) $key | trunc 63 | trimSuffix "-") | quote }}
@@ -192,7 +181,7 @@ additional pods (i.e. Docker-in-Docker pod)
 {{- define "platforma.sharedVolumeMounts" -}}
   {{- $allPvcs := fromJson (include "platforma.allPvcs" .) -}}
   {{- range $key, $pvc := $allPvcs -}}
-    {{- if or (eq $key "main-root") (eq $key "work") }}
+    {{- if eq $key "main-root" }}
 - name: {{ $key | trunc 63 | trimSuffix "-" }}
   mountPath: {{ $pvc.mountPath }}
     {{- end -}}
@@ -266,4 +255,11 @@ Use common resources section, overriding particular values if they are not empty
   {{- end -}}
 
   {{- toYaml $resources -}}
+{{- end -}}
+
+{{/*
+Create the name of the platforma-data PVC.
+*/}}
+{{- define "platforma.platformaDataPvcName" -}}
+{{- printf "%s-platforma-data" (include "platforma.fullname" .) -}}
 {{- end -}}
