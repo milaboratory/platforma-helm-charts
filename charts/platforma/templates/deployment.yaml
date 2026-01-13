@@ -65,12 +65,12 @@ spec:
             {{- end }}
             {{- end }}
             # Local Storage
-            {{- /* mainRoot is always created */ -}}
+            # mainRoot is always created
             - "--main-root={{ .Values.persistence.mainRoot.mountPath }}"
-            {{- /* workDir and packagesDir are subfolders within mainRoot */ -}}
+            # workDir and packagesDir are subfolders within mainRoot
             - "--work-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.workDirName }}"
             - "--packages-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.packagesDirName }}"
-            {{- /* dbDir can optionally be a separate PVC */ -}}
+            # dbDir can optionally be a separate PVC
             {{- if .Values.persistence.dbDir.enabled }}
             - "--db-dir={{ .Values.persistence.dbDir.mountPath }}"
             {{- end }}
