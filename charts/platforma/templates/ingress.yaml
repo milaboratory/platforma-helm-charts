@@ -69,6 +69,9 @@ spec:
   {{- $tlsHosts := list }}
   {{- range .Values.ingress.hosts }}
   {{- if and .tls .tls.enabled }}
+  {{- if not .tls.secretName }}
+  {{- fail (printf "TLS is enabled for host '%s' but tls.secretName is not provided. Please specify a secretName or disable TLS for this host." .host) }}
+  {{- end }}
   {{- $tlsHosts = append $tlsHosts . }}
   {{- end }}
   {{- end }}
@@ -82,6 +85,9 @@ spec:
   {{- end }}
   {{- else if .Values.ingress.tls.enabled }}
   {{/* Legacy single-host TLS configuration (deprecated) */}}
+  {{- if not .Values.ingress.tls.secretName }}
+  {{- fail "TLS is enabled but ingress.tls.secretName is not provided. Please specify a secretName or disable TLS." }}
+  {{- end }}
   tls:
     - hosts:
         - {{ .Values.ingress.host | quote }}
