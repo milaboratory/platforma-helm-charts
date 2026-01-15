@@ -127,18 +127,25 @@ probes:
     # -- Configuration for grpc probe
     grpc:
       port: 6345 # Port for gRPC probe
-      # -- Service name for gRPC probe. Required for headless services.
-      service: ""
-  readiness:
+      # -- Service name for gRPC probe. Platforma has multiple 'services' under the hood.
+      # -- Empty string means 'all services'. 'GRPC' value makes to check only gRPC server
+      # -- that responds to health check request.
+      service: "GRPC"
+  startup:
     enabled: true
     # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
     type: grpc
     # -- Common probe settings
-    initialDelaySeconds: 10
+    # Startup probe handles the initial bootstrap period (up to 15 minutes).
+    # Once the startup probe succeeds, Kubernetes switches to the readiness probe
+    # for ongoing health checks with faster failure detection.
+    # Total startup time allowed: initialDelaySeconds + (failureThreshold-1) * periodSeconds
+    # = 10s + (180-1) * 5s = 10s + 895s = 905s (~15 minutes)
+    initialDelaySeconds: 10 # Start probing early
     periodSeconds: 5
     timeoutSeconds: 3
     successThreshold: 1
-    failureThreshold: 3
+    failureThreshold: 174 # Allow up to ~15 minutes for startup (30s + 174*5s = 900s)
     # -- Configuration for httpGet probe
     httpGet:
       path: /health
@@ -149,7 +156,31 @@ probes:
     # -- Configuration for grpc probe
     grpc:
       port: 6345 # Port for gRPC probe
-      # -- Service name for gRPC probe. Required for headless services.
+      # -- Service name for gRPC probe. Empty value checks all services.
+      service: ""
+  readiness:
+    enabled: true
+    # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
+    type: grpc
+    # -- Common probe settings
+    # Readiness probe takes over after startup probe succeeds.
+    # This probe has faster failure detection for post-startup failures.
+    initialDelaySeconds: 0 # No delay needed - startup probe handles initial period
+    periodSeconds: 5
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 12 # Fast failure detection: 12 * 5s = 1 minute
+    # -- Configuration for httpGet probe
+    httpGet:
+      path: /health
+      port: 8080 # Port for httpGet probe
+    # -- Configuration for tcpSocket probe
+    tcpSocket:
+      port: 6345 # Port for tcpSocket probe
+    # -- Configuration for grpc probe
+    grpc:
+      port: 6345 # Port for gRPC probe
+      # -- Service name for gRPC probe. Empty value checks all services.
       service: ""
 
 # -- Environment Variables for the application container

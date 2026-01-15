@@ -393,6 +393,30 @@ spec:
             failureThreshold: {{ .failureThreshold }}
           {{- end }}
           {{- end }}
+          {{- with .Values.probes.startup }}
+          {{- if .enabled }}
+          startupProbe:
+            {{- if eq .type "httpGet" }}
+            httpGet:
+              path: {{ .httpGet.path }}
+              port: {{ .httpGet.port }}
+            {{- else if eq .type "tcpSocket" }}
+            tcpSocket:
+              port: {{ .tcpSocket.port }}
+            {{- else if eq .type "grpc" }}
+            grpc:
+              port: {{ .grpc.port }}
+              {{- if .grpc.service }}
+              service: {{ .grpc.service }}
+              {{- end }}
+            {{- end }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            successThreshold: {{ .successThreshold }}
+            failureThreshold: {{ .failureThreshold }}
+          {{- end }}
+          {{- end }}
           {{- with .Values.probes.readiness }}
           {{- if .enabled }}
           readinessProbe:
