@@ -1,5 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.2.1] - 2026-01-15
+### Features
+
+- Add support for multi-hosts for ingress ([`8b6105f`](https://github.com/milaboratory/platforma-helm-charts/commit/8b6105fe199d49fc8ee391039a2b1fefdee410f3))
+### MILAB-5304
+
+- Give platforma 15 min before becoming ready (long bootstrap) ([`dd55d2c`](https://github.com/milaboratory/platforma-helm-charts/commit/dd55d2c79f026a4b95b6eff0528c9557b66e981b))
+### Miscellaneous Tasks
+
+- Update tls checking logic based on suggestions ([`714d044`](https://github.com/milaboratory/platforma-helm-charts/commit/714d044ae3713ea59f3739f3ea5487810e53ab1f))
+
 ## [v2.2.0] - 2025-11-26
 ### Miscellaneous Tasks
 
