@@ -83,14 +83,32 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # cert-manager.io/cluster-issuer: letsencrypt-prod
-  # -- The hostname to be used for the Ingress resource.
+
+  # -- Multiple hosts configuration (RECOMMENDED).
+  # When defined with at least one entry, this takes precedence over the deprecated 'host' field.
+  # Each host can have its own TLS configuration.
+  hosts: []
+  #  - host: platforma.example.com
+  #    tls:
+  #      enabled: true
+  #      secretName: "platforma-example-tls"
+  #  - host: platforma.internal.local
+  #    tls:
+  #      enabled: false
+
+  # -- DEPRECATED: Single hostname configuration.
+  # Use 'hosts' array instead for new deployments.
+  # This field is kept for backward compatibility and will be removed in a future release.
   host: platforma.local
 
-  # -- TLS configuration for the Ingress.
+  # -- DEPRECATED: TLS configuration for single host.
+  # Use 'hosts[].tls' instead for new deployments.
+  # This field is kept for backward compatibility and will be removed in a future release.
   tls:
     enabled: false
     # -- The name of the Kubernetes secret that contains the TLS certificate.
     secretName: ""
+
   # -- Path configurations for the Ingress.
   paths:
     # -- Configuration for the main gRPC service path.
