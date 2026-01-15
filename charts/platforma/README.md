@@ -57,7 +57,7 @@ helm install my-platforma platforma/platforma \
 
 - **image**: repository, tag (defaults to `appVersion`), pullPolicy, `imagePullSecrets`.
 - **service**: gRPC Service on `listenOptions.port` (default 6345). Optional HTTP Service only when `primaryStorage.fs.enabled` is true.
-- **ingress**: Single `host`; gRPC path always when enabled; HTTP path only if `primaryStorage.fs.enabled`.
+- **ingress**: Single `host` (deprecated) or multiple `hosts` array; gRPC path always when enabled; HTTP path only if `primaryStorage.fs.enabled`.
 - **probes**: `httpGet`, `tcpSocket`, or `grpc`, separately configurable for liveness/readiness.
 - **deployment**: strategy, pod labels/annotations, securityContext and podSecurityContext.
 - **persistence**: either single `mainRoot` PVC or split `dbDir`/`workDir`/`packagesDir` PVCs; optional logging PVC; optional FS data libraries; optional FS primary storage PVC.
@@ -611,6 +611,37 @@ When deploying to a production environment, consider the following:
   - Use `networkPolicy` to restrict traffic between pods for a more secure network posture.
 - **Ingress specifics**:
   - The HTTP port and `-http` Service exist only when `primaryStorage.fs.enabled` is true. The Ingress HTTP path is added only in that case. gRPC access is always via the main Service.
+  - **Multiple hosts support**: Use the `hosts` array (recommended) for multiple hostnames with per-host TLS:
+    ```yaml
+    ingress:
+      enabled: true
+      className: "nginx"
+      hosts:
+        - host: platforma.example.com
+          tls:
+            enabled: true
+            secretName: "platforma-example-tls"
+        - host: platforma.internal.local
+          tls:
+            enabled: false
+    ```
+  - **DEPRECATED**: The legacy `host` and `tls` fields are deprecated and will be removed in a future release. Migrate to the `hosts` array:
+    ```yaml
+    # Legacy (deprecated):
+    ingress:
+      host: platforma.example.com
+      tls:
+        enabled: true
+        secretName: "platforma-tls"
+
+    # New (recommended):
+    ingress:
+      hosts:
+        - host: platforma.example.com
+          tls:
+            enabled: true
+            secretName: "platforma-tls"
+    ```
 - **Traefik + gRPC (h2c)**:
   - If you use Traefik, you may need to enable h2c on the Service:
     ```yaml

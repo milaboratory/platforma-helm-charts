@@ -14,6 +14,33 @@ spec:
   ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   rules:
+  {{- if gt (len .Values.ingress.hosts) 0 }}
+  {{/* New multi-host configuration */}}
+  {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- if $.Values.ingress.paths.grpc.enabled }}
+          - path: {{ $.Values.ingress.paths.grpc.path }}
+            pathType: {{ $.Values.ingress.paths.grpc.pathType }}
+            backend:
+              service:
+                name: {{ include "platforma.fullname" $ }}
+                port:
+                  name: grpc
+          {{- end }}
+          {{- if and $.Values.primaryStorage.fs.enabled $.Values.ingress.paths.http.enabled }}
+          - path: {{ $.Values.ingress.paths.http.path }}
+            pathType: {{ $.Values.ingress.paths.http.pathType }}
+            backend:
+              service:
+                name: {{ include "platforma.fullname" $ }}-http
+                port:
+                  name: http
+          {{- end }}
+  {{- end }}
+  {{- else }}
+  {{/* Legacy single-host configuration (deprecated) */}}
     - host: {{ .Values.ingress.host | quote }}
       http:
         paths:
@@ -35,7 +62,26 @@ spec:
                 port:
                   name: http
           {{- end }}
-  {{- if .Values.ingress.tls.enabled }}
+  {{- end }}
+  {{/* TLS configuration */}}
+  {{- if gt (len .Values.ingress.hosts) 0 }}
+  {{/* New multi-host TLS configuration */}}
+  {{- $tlsHosts := list }}
+  {{- range .Values.ingress.hosts }}
+  {{- if and .tls .tls.enabled }}
+  {{- $tlsHosts = append $tlsHosts . }}
+  {{- end }}
+  {{- end }}
+  {{- if gt (len $tlsHosts) 0 }}
+  tls:
+    {{- range $tlsHosts }}
+    - hosts:
+        - {{ .host | quote }}
+      secretName: {{ .tls.secretName }}
+    {{- end }}
+  {{- end }}
+  {{- else if .Values.ingress.tls.enabled }}
+  {{/* Legacy single-host TLS configuration (deprecated) */}}
   tls:
     - hosts:
         - {{ .Values.ingress.host | quote }}
