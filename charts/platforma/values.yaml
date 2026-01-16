@@ -315,6 +315,9 @@ persistence:
     workDirName: "work"
     # -- Name of the packages directory subfolder within mainRoot.
     packagesDirName: "packages"
+    # -- Enable init container to chown workDir and packagesDir to match securityContext.runAsUser/runAsGroup.
+    # This ensures the application has write permissions when running as non-root.
+    initDirsChown: true
   # -- Configuration for the database volume (optional separate setup).
   # If enabled, creates a separate PVC for the database directory.
   # If disabled, the database will be stored within mainRoot.
