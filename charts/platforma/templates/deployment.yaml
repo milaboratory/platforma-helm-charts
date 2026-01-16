@@ -315,6 +315,10 @@ spec:
             - "--k8s-work-dir-name={{ .Values.persistence.mainRoot.workDirName }}"
             - "--k8s-storage-location={{ .Values.persistence.mainRoot.mountPath }}"
             {{- end -}}
+            {{- if hasPrefix "dir://" .Values.logging.destination }}
+            - "--monitoring-dump-dir={{ trimPrefix "dir://" .Values.logging.destination }}"
+            {{- end }}
+
             # Extra Arguments
             {{- range .Values.extraArgs }}
             - {{ . | quote }}
