@@ -125,30 +125,6 @@ ingress:
 
 # -- Health check probes
 probes:
-  liveness:
-    enabled: true
-    # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
-    type: grpc
-    # -- Common probe settings
-    initialDelaySeconds: 30
-    periodSeconds: 10
-    timeoutSeconds: 5
-    successThreshold: 1
-    failureThreshold: 6
-    # -- Configuration for httpGet probe
-    httpGet:
-      path: /health
-      port: 8080 # Port for httpGet probe
-    # -- Configuration for tcpSocket probe
-    tcpSocket:
-      port: 6345 # Port for tcpSocket probe
-    # -- Configuration for grpc probe
-    grpc:
-      port: 6345 # Port for gRPC probe
-      # -- Service name for gRPC probe. Platforma has multiple 'services' under the hood.
-      # -- Empty string means 'all services'. 'GRPC' value makes to check only gRPC server
-      # -- that responds to health check request.
-      service: "GRPC"
   startup:
     enabled: true
     # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
@@ -176,6 +152,30 @@ probes:
       port: 6345 # Port for gRPC probe
       # -- Service name for gRPC probe. Empty value checks all services.
       service: ""
+  liveness:
+    enabled: true
+    # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
+    type: grpc
+    # -- Common probe settings
+    initialDelaySeconds: 0 # No delay needed - startup probe handles initial period
+    periodSeconds: 10
+    timeoutSeconds: 15
+    successThreshold: 1
+    failureThreshold: 12
+    # -- Configuration for httpGet probe
+    httpGet:
+      path: /health
+      port: 8080 # Port for httpGet probe
+    # -- Configuration for tcpSocket probe
+    tcpSocket:
+      port: 6345 # Port for tcpSocket probe
+    # -- Configuration for grpc probe
+    grpc:
+      port: 6345 # Port for gRPC probe
+      # -- Service name for gRPC probe. Platforma has multiple 'services' under the hood.
+      # -- Empty string means 'all services'. 'GRPC' value makes to check only gRPC server
+      # -- that responds to health check request.
+      service: "GRPC"
   readiness:
     enabled: true
     # -- Type of probe. Can be 'httpGet', 'tcpSocket', or 'grpc'.
@@ -185,9 +185,9 @@ probes:
     # This probe has faster failure detection for post-startup failures.
     initialDelaySeconds: 0 # No delay needed - startup probe handles initial period
     periodSeconds: 5
-    timeoutSeconds: 3
+    timeoutSeconds: 15
     successThreshold: 1
-    failureThreshold: 12 # Fast failure detection: 12 * 5s = 1 minute
+    failureThreshold: 12 # failure case: 12 * 5s = 1 minute, timeout case: 12 * 15s = 3 minutes
     # -- Configuration for httpGet probe
     httpGet:
       path: /health
