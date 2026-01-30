@@ -75,11 +75,10 @@ data:
               volumeMounts:
                 - name: workdirs
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
-                - name: common
-                  mountPath: {{ include "platforma.mainRootCommonDir" . }}
                 - name: job-script
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/job_script.sh
                   subPath: job_script.sh
+                  readOnly: true
               <<- if .SecurityContext >>
               securityContext:
                 <<- if .SecurityContext.RunAsUser >>
