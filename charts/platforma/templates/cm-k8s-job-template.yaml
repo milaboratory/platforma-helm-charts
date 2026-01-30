@@ -18,10 +18,9 @@ data:
     #   .Name                      - Generated from JobNamePrefix + ResourceID
     #   .Namespace                 - From Helm: k8s.namespace (or deployment namespace)
     #   .Image                     - Block's container image
-    #   .Command                   - Block execution command
     #   .ContainerName             - Generated container name
     #   .WorkDirName               - Resource-specific workdir name (e.g., "abc123")
-    #   .Env                       - Environment variables for the container
+    #   .Env                       - Environment variables for the container (includes PL_JOB_CMD_AND_ARGS)
     #   .SecurityContext           - Optional RunAsUser/RunAsGroup from Helm
     #   .PriorityClass             - Priority class for Kueue queue selection ("ui-tasks" or "batch-tasks")
     #
@@ -55,7 +54,8 @@ data:
           containers:
             - name: << .ContainerName >>
               image: << .Image >>
-              command: << toJson .Command >>
+              # Command runs job_script.sh which reads PL_JOB_CMD_AND_ARGS env var
+              command: ["/bin/sh", "{{ include "platforma.mainRootWorkDir" . }}/job_script.sh"]
               # workingDir = mountPath/workDirFolder/WorkDirName
               workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
               <<- if .Env >>
@@ -77,6 +77,9 @@ data:
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
                 - name: common
                   mountPath: {{ include "platforma.mainRootCommonDir" . }}
+                - name: job-script
+                  mountPath: {{ include "platforma.mainRootWorkDir" . }}/job_script.sh
+                  subPath: job_script.sh
               <<- if .SecurityContext >>
               securityContext:
                 <<- if .SecurityContext.RunAsUser >>
@@ -93,4 +96,8 @@ data:
             - name: common
               persistentVolumeClaim:
                 claimName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
+            - name: job-script
+              configMap:
+                name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+                defaultMode: 0755
 {{- end }}
