@@ -55,16 +55,29 @@ spec:
             - /bin/sh
             - -c
             - |
-              WORK_DIR="{{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.workDirName }}"
-              PACKAGES_DIR="{{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.packagesDirName }}"
+              WORK_DIR="{{ include "platforma.mainRootWorkDir" . }}"
+              PACKAGES_DIR="{{ include "platforma.instanceMainRootMountPath" . }}/{{ .Values.persistence.mainRoot.packagesDirName }}"
+              COMMON_DIR="{{ include "platforma.instanceMainRootMountPath" . }}/common"
               USER_ID="{{ .Values.deployment.securityContext.runAsUser }}"
               GROUP_ID="{{ .Values.deployment.securityContext.runAsGroup | default .Values.deployment.securityContext.runAsUser }}"
 
-              mkdir -p "$WORK_DIR" "$PACKAGES_DIR"
-              chown -R "$USER_ID:$GROUP_ID" "$WORK_DIR" "$PACKAGES_DIR"
-              echo "Changed ownership of $WORK_DIR and $PACKAGES_DIR to $USER_ID:$GROUP_ID"
+              mkdir -p "$WORK_DIR" "$PACKAGES_DIR" "$COMMON_DIR"
+              chown -R "$USER_ID:$GROUP_ID" "$WORK_DIR" "$PACKAGES_DIR" "$COMMON_DIR"
+              echo "Changed ownership of $WORK_DIR, $PACKAGES_DIR and $COMMON_DIR to $USER_ID:$GROUP_ID"
+              {{- if .Values.k8s.enabled }}
+              # Copy K8s job script to common directory
+              cp /etc/platforma/scripts/job_script.sh "$COMMON_DIR/job_script.sh"
+              chmod +x "$COMMON_DIR/job_script.sh"
+              chown "$USER_ID:$GROUP_ID" "$COMMON_DIR/job_script.sh"
+              echo "Copied job_script.sh to $COMMON_DIR"
+              {{- end }}
           volumeMounts:
             {{- include "platforma.volumeMounts" . | nindent 12 }}
+            {{- if .Values.k8s.enabled }}
+            - name: k8s-job-script
+              mountPath: "/etc/platforma/scripts"
+              readOnly: true
+            {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -90,10 +103,8 @@ spec:
             {{- end }}
             # Local Storage
             # mainRoot is always created
-            - "--main-root={{ .Values.persistence.mainRoot.mountPath }}"
+            - "--main-root={{ include "platforma.instanceMainRootMountPath" . }}"
             # workDir and packagesDir are subfolders within mainRoot
-            - "--work-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.workDirName }}"
-            - "--packages-dir={{ .Values.persistence.mainRoot.mountPath }}/{{ .Values.persistence.mainRoot.packagesDirName }}"
             # dbDir can optionally be a separate PVC
             {{- if .Values.persistence.dbDir.enabled }}
             - "--db-dir={{ .Values.persistence.dbDir.mountPath }}"
@@ -331,13 +342,9 @@ spec:
             - "--assets-registry-url={{ .Values.assetsRegistry }}"
             {{- end -}}
             {{- if .Values.k8s.enabled }}
-            {{- if .Values.persistence.mainRoot.existingClaim }}
-            - "--k8s-pvc-name={{ .Values.persistence.mainRoot.existingClaim }}"
-            {{- else }}
-            - "--k8s-pvc-name={{ printf "%s-main-root" (include "platforma.fullname" .) }}"
-            {{- end }}
-            - "--k8s-work-dir-name={{ .Values.persistence.mainRoot.workDirName }}"
-            - "--k8s-storage-location={{ .Values.persistence.mainRoot.mountPath }}"
+            # K8s job template is provided via ConfigMap with Helm values baked in.
+            # Backend only needs to pass dynamic values like WorkDirName.
+            - "--k8s-custom-job-template=/etc/platforma/templates/k8s-job-template/job-template.yaml"
             {{- end -}}
             {{- if hasPrefix "dir://" .Values.logging.destination }}
             - "--monitoring-dump-dir={{ trimPrefix "dir://" .Values.logging.destination }}"
@@ -464,6 +471,11 @@ spec:
               mountPath: "/etc/platforma/templates/google-batch-custom-job-template-inline"
               readOnly: true
             {{- end }}
+            {{- if .Values.k8s.enabled }}
+            - name: k8s-job-template
+              mountPath: "/etc/platforma/templates/k8s-job-template"
+              readOnly: true
+            {{- end }}
             {{- include "platforma.volumeMounts" . | nindent 12 }}
             {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
             - name: license-secret
@@ -532,6 +544,15 @@ spec:
         - name: google-batch-custom-job-template-inline
           configMap:
             name: {{ printf "%s-job-template" (include "platforma.fullname" .) }}
+        {{- end }}
+        {{- if .Values.k8s.enabled }}
+        - name: k8s-job-template
+          configMap:
+            name: {{ printf "%s-k8s-job-template" (include "platforma.fullname" .) }}
+        - name: k8s-job-script
+          configMap:
+            name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+            defaultMode: 0755
         {{- end }}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}

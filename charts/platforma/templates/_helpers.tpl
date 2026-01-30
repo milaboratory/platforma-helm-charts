@@ -263,3 +263,24 @@ Create the name of the platforma-data PVC.
 {{- define "platforma.platformaDataPvcName" -}}
 {{- printf "%s-platforma-data" (include "platforma.fullname" .) -}}
 {{- end -}}
+
+{{/*
+Returns the main root mount path.
+*/}}
+{{- define "platforma.instanceMainRootMountPath" -}}
+{{- printf "%s/%s" .Values.persistence.mainRoot.mountPath .Values.persistence.mainRoot.dataPath -}}
+{{- end -}}
+
+{{/*
+Returns the full path to the work directory (mountPath/workDirName).
+*/}}
+{{- define "platforma.mainRootWorkDir" -}}
+{{- printf "%s/%s" (include "platforma.instanceMainRootMountPath" .) .Values.persistence.mainRoot.workDirName -}}
+{{- end -}}
+
+{{/*
+Returns the full path to the common directory (mountPath/dataPath/common).
+*/}}
+{{- define "platforma.mainRootCommonDir" -}}
+{{- printf "%s/common" (include "platforma.instanceMainRootMountPath" .) -}}
+{{- end -}}
