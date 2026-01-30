@@ -197,7 +197,7 @@ env:
 # -- Deployment-level configuration
 deployment:
   priorityClassName: "" # Assigns a PriorityClass (e.g., "high-priority") to the Pod.
-  schedulerName: ""     # Use an alternate scheduler, e.g., "stork-scheduler".
+  schedulerName: "" # Use an alternate scheduler, e.g., "stork-scheduler".
   # -- Override the default container entrypoint by specifying a command.
   # By default, this is disabled, and the chart passes arguments directly
   # to the container's predefined ENTRYPOINT.
@@ -233,8 +233,8 @@ deployment:
     readOnlyRootFilesystem: false # Allow writing to the container's root filesystem
     allowPrivilegeEscalation: false # Allow processes to gain more privileges
     capabilities:
-       add: [] # Add all Linux capabilities. Use with extreme caution.
-       drop: ["ALL"] # Drop no capabilities. Consider dropping unnecessary capabilities.
+      add: [] # Add all Linux capabilities. Use with extreme caution.
+      drop: ["ALL"] # Drop no capabilities. Consider dropping unnecessary capabilities.
   # -- Pod-level security context.
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   podSecurityContext:
@@ -311,11 +311,10 @@ persistence:
     size: 500Gi
     # storageClass: "standard"
     mountPath: /data/main-root
-    # -- Name of the work directory subfolder within mainRoot.
+    # -- Name of the data directory subfolder within mainRoot. It allows to use a few instances of Platforma with the same PVC.
+    dataPath: "main-root"
+    # -- Name of the work directory subfolder within the data path (mountPath/dataPath/workDirName)
     workDirName: "work"
-    # -- Name of the packages directory subfolder within mainRoot.
-    packagesDirName: "packages"
-    # -- Enable init container to chown workDir and packagesDir to match securityContext.runAsUser/runAsGroup.
     # This ensures the application has write permissions when running as non-root.
     initDirsChown: true
   # -- Configuration for the database volume (optional separate setup).
@@ -349,7 +348,6 @@ listenOptions:
   selfSignedTlsOrg: ""
   selfSignedTlsDomains: []
   selfSignedTlsIps: []
-
 
 # -- Alternative registry with genome index assets for bio software
 assetsRegistry: ""
@@ -421,7 +419,6 @@ primaryStorage:
     url: "" # e.g., gs://<bucket>[/<prefix-in-bucket>]
     projectId: "" # GCP project ID
     serviceAccount: "" # GCP service account to use for authentication
-
 
 # -- Data Library Options (--no-data-library, --no-host-data-library, --data-library-fs, --data-library-s3, --data-library-gcs)
 dataLibrary:
@@ -623,8 +620,19 @@ googleBatch:
       key: ""
 
 # -- Kubernetes Options
+# Configuration for running jobs on Kubernetes via Kueue
 k8s:
   enabled: false
+  # -- Kueue configuration for job queue management
+  kueue:
+    # -- Enable Kueue labels on jobs. When enabled, jobs will have queue and priority labels.
+    enabled: true
+    # -- Queue names for different priority classes
+    queues:
+      # -- Queue name for UI-triggered tasks (higher priority)
+      uiTasks: "ui-tasks"
+      # -- Queue name for batch/background tasks (lower priority)
+      batchTasks: "batch-tasks"
 
 # -- Logging Options
 # This section configures the application's logging behavior using the --log-dst flag.

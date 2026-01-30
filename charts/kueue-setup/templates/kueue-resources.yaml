@@ -1,0 +1,63 @@
+{{- if .Values.queues.enabled }}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ResourceFlavor
+metadata:
+  name: {{ .Values.queues.resourceFlavor.name | default "default" }}
+  labels:
+    {{- include "kueue-setup.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+spec:
+  {{- with .Values.queues.resourceFlavor.nodeLabels }}
+  nodeLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.queues.resourceFlavor.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: ClusterQueue
+metadata:
+  name: {{ .Values.queues.clusterQueue.name | default "cluster-queue" }}
+  labels:
+    {{- include "kueue-setup.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "6"
+spec:
+  {{- with .Values.queues.clusterQueue.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+  namespaceSelector: {}
+  {{- end }}
+  resourceGroups:
+    - coveredResources: ["cpu", "memory"]
+      flavors:
+        - name: {{ .Values.queues.resourceFlavor.name | default "default" }}
+          resources:
+            - name: cpu
+              nominalQuota: {{ .Values.queues.clusterQueue.resources.cpu | default "32" | quote }}
+            - name: memory
+              nominalQuota: {{ .Values.queues.clusterQueue.resources.memory | default "64Gi" | quote }}
+    {{- with .Values.queues.clusterQueue.additionalResourceGroups }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+---
+apiVersion: kueue.x-k8s.io/v1beta1
+kind: LocalQueue
+metadata:
+  name: {{ .Values.queues.localQueue.name | default "local-queue" }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kueue-setup.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "7"
+spec:
+  clusterQueue: {{ .Values.queues.clusterQueue.name | default "cluster-queue" }}
+{{- end }}
