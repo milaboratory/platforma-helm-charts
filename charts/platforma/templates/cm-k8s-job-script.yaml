@@ -6,6 +6,44 @@ metadata:
   labels:
     {{- include "platforma.labels" . | nindent 4 }}
 data:
+  verification_script.sh: |
+    #!/bin/bash
+
+    # This script is used to verify that the k8s driver is configured correctly.
+    # It is run as a job in Kubernetes and checks that the files created on server side are readable on job side.
+    # It also creates files on job side so server then can check it has access to them.
+
+    set -o nounset
+    set -o errexit
+
+    function check_file() {
+        local file="${1}"
+        local expected_content="${2}"
+        
+        if ! [ -e "${file}" ]; then
+            echo "File '${file}' created on server side is not available on job side"
+            return 1
+        fi
+        if ! [ -r "${file}" ]; then
+            echo "File '${file}' created on server side is not readable on job side"
+            return 1
+        fi
+        if ! grep "${expected_content}" "${file}" >/dev/null; then
+            echo "File '${file}' created on server side has wrong content on job side"
+            echo "Expected content: '${expected_content}'"
+            echo "Actual content: $(cat "${file}")"
+            return 1
+        fi
+
+        return 0
+    }
+
+    echo "${PL_BATCH_CHECK_STRING} (storage)" > "${PL_BATCH_JOB_SIDE_STORAGE_FILE}"
+    echo "${PL_BATCH_CHECK_STRING} (packages)" > "${PL_BATCH_JOB_SIDE_PACKAGES_FILE}"
+
+    check_file "${PL_BATCH_SERVER_SIDE_STORAGE_FILE}" "${PL_BATCH_CHECK_STRING} (storage)"
+    check_file "${PL_BATCH_SERVER_SIDE_PACKAGES_FILE}" "${PL_BATCH_CHECK_STRING} (packages)"
+
   job_script.sh: |
     #!/bin/sh
 

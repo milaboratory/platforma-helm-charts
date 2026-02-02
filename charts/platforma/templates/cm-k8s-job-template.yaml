@@ -12,11 +12,8 @@ data:
   job-template.yaml: |-
     # Kubernetes Job Template for Platforma
     #
-    # Syntax: << .Variable >> - Backend parameters (processed by Platforma at job creation)
-    #
     # Template variables and their sources:
     #   .JobID                     - Generated from JobNamePrefix + ResourceID
-    #   .Namespace                 - From Helm: k8s.namespace (or deployment namespace)
     #   .Image                     - Block's container image
     #   .ContainerName             - Generated container name
     #   .WorkDirName               - Resource-specific workdir name (e.g., "abc123")
@@ -32,11 +29,12 @@ data:
     #   mountPath: {{ include "platforma.instanceMainRootMountPath" . }}
     #   workDirFolder: {{ .Values.persistence.mainRoot.workDirName }}
     #   pvcName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
+    #   namespace: << .Namespace >>
     apiVersion: batch/v1
     kind: Job
     metadata:
       name: << .JobID >>
-      namespace: << .Namespace >>
+      namespace: {{ .Release.Namespace }}
       {{- if .Values.k8s.kueue.enabled }}
       labels:
         <<- if eq .PlatformaQueue "ui-tasks" >>
@@ -82,6 +80,10 @@ data:
               volumeMounts:
                 - name: workdirs
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
+                - name: verification-script
+                  mountPath: /etc/platforma/scripts/verification_script.sh
+                  subPath: verification_script.sh
+                  readOnly: true
                 - name: job-script
                   mountPath: /etc/platforma/scripts/job_script.sh
                   subPath: job_script.sh
