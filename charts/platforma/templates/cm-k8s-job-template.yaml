@@ -20,7 +20,8 @@ data:
     #   .Image                     - Block's container image
     #   .ContainerName             - Generated container name
     #   .WorkDirName               - Resource-specific workdir name (e.g., "abc123")
-    #   .Env                       - Environment variables for the container (includes PL_JOB_CMD_AND_ARGS)
+    #   .Env                       - Environment variables for the container
+#   .Command                   - Command to run (array), converted to PL_JOB_CMD_AND_ARGS env var
     #   .SecurityContext           - Optional RunAsUser/RunAsGroup from Helm
     #   .Resources                 - Optional container resource requests (requests = limits)
     #   .Resources.CPU             - CPU cores (int, e.g., 1, 2, 4)
@@ -61,8 +62,11 @@ data:
               command: ["/bin/sh", "{{ include "platforma.mainRootWorkDir" . }}/job_script.sh"]
               # workingDir = mountPath/workDirFolder/WorkDirName
               workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
-              <<- if .Env >>
               env:
+                # Command is serialized as shell-quoted arguments to preserve argument boundaries.
+                # job_script.sh executes this via sh -c.
+                - name: PL_JOB_CMD_AND_ARGS
+                  value: << toShellCmd .Command | quote >>
                 <<- range .Env >>
                 - name: << .Name >>
                   <<- if .SecretName >>
@@ -74,7 +78,6 @@ data:
                   value: << .Value | quote >>
                   <<- end >>
                 <<- end >>
-              <<- end >>
               volumeMounts:
                 - name: workdirs
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
