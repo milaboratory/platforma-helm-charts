@@ -15,7 +15,7 @@ data:
     # Syntax: << .Variable >> - Backend parameters (processed by Platforma at job creation)
     #
     # Template variables and their sources:
-    #   .Name                      - Generated from JobNamePrefix + ResourceID
+    #   .JobID                     - Generated from JobNamePrefix + ResourceID
     #   .Namespace                 - From Helm: k8s.namespace (or deployment namespace)
     #   .Image                     - Block's container image
     #   .ContainerName             - Generated container name
@@ -34,7 +34,7 @@ data:
     apiVersion: batch/v1
     kind: Job
     metadata:
-      name: << .Name >>
+      name: << .JobID >>
       namespace: << .Namespace >>
       {{- if .Values.k8s.kueue.enabled }}
       labels:
