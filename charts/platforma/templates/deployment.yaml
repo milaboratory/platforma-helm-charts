@@ -332,6 +332,7 @@ spec:
             {{- if .Values.k8s.enabled }}
             # K8s job template is provided via ConfigMap with Helm values baked in.
             # Backend only needs to pass dynamic values like WorkDirName.
+            - "--k8s-namespace={{ .Release.Namespace }}"
             - "--k8s-custom-job-template=/etc/platforma/templates/k8s-job-template/job-template.yaml"
             {{- end -}}
             {{- if hasPrefix "dir://" .Values.logging.destination }}
