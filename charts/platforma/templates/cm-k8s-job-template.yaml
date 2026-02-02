@@ -21,7 +21,7 @@ data:
     #   .ContainerName             - Generated container name
     #   .WorkDirName               - Resource-specific workdir name (e.g., "abc123")
     #   .Env                       - Environment variables for the container
-#   .Command                   - Command to run (array), converted to PL_JOB_CMD_AND_ARGS env var
+    #   .Command                   - Command to run (array), converted to PL_JOB_CMD_AND_ARGS env var
     #   .SecurityContext           - Optional RunAsUser/RunAsGroup from Helm
     #   .Resources                 - Optional container resource requests (requests = limits)
     #   .Resources.CPU             - CPU cores (int, e.g., 1, 2, 4)
@@ -114,9 +114,6 @@ data:
               <<- end >>
           volumes:
             - name: workdirs
-              persistentVolumeClaim:
-                claimName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
-            - name: common
               persistentVolumeClaim:
                 claimName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
             - name: job-script
