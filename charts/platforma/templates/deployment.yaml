@@ -64,20 +64,8 @@ spec:
               mkdir -p "$WORK_DIR" "$PACKAGES_DIR" "$COMMON_DIR"
               chown -R "$USER_ID:$GROUP_ID" "$WORK_DIR" "$PACKAGES_DIR" "$COMMON_DIR"
               echo "Changed ownership of $WORK_DIR, $PACKAGES_DIR and $COMMON_DIR to $USER_ID:$GROUP_ID"
-              {{- if .Values.k8s.enabled }}
-              # Copy K8s job script to common directory
-              cp /etc/platforma/scripts/job_script.sh "$COMMON_DIR/job_script.sh"
-              chmod +x "$COMMON_DIR/job_script.sh"
-              chown "$USER_ID:$GROUP_ID" "$COMMON_DIR/job_script.sh"
-              echo "Copied job_script.sh to $COMMON_DIR"
-              {{- end }}
           volumeMounts:
             {{- include "platforma.volumeMounts" . | nindent 12 }}
-            {{- if .Values.k8s.enabled }}
-            - name: k8s-job-script
-              mountPath: "/etc/platforma/scripts"
-              readOnly: true
-            {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -549,10 +537,6 @@ spec:
         - name: k8s-job-template
           configMap:
             name: {{ printf "%s-k8s-job-template" (include "platforma.fullname" .) }}
-        - name: k8s-job-script
-          configMap:
-            name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
-            defaultMode: 0755
         {{- end }}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
