@@ -26,7 +26,7 @@ data:
     #   .Resources                 - Optional container resource requests (requests = limits)
     #   .Resources.CPU             - CPU cores (int, e.g., 1, 2, 4)
     #   .Resources.Memory          - Memory (mijson.SizeUnit, e.g., 1*units.GiB)
-    #   .PriorityClass             - Priority class for Kueue queue selection ("ui-tasks" or "batch-tasks")
+    #   .PlatformaQueue            - Platforma queue for Kueue queue selection ("ui-tasks" or "batch-tasks")
     #
     # Helm-substituted values (baked in at deploy time):
     #   mountPath: {{ include "platforma.instanceMainRootMountPath" . }}
@@ -39,7 +39,7 @@ data:
       namespace: << .Namespace >>
       {{- if .Values.k8s.kueue.enabled }}
       labels:
-        <<- if eq .PriorityClass "ui-tasks" >>
+        <<- if eq .PlatformaQueue "ui-tasks" >>
         kueue.x-k8s.io/queue-name: "{{ .Values.k8s.kueue.queues.uiTasks }}"
         kueue.x-k8s.io/priority-class: "{{ .Values.k8s.kueue.queues.uiTasks }}"
         <<- else >>
@@ -59,7 +59,8 @@ data:
             - name: << .ContainerName >>
               image: << .Image >>
               # Command runs job_script.sh which reads PL_JOB_CMD_AND_ARGS env var
-              command: ["/bin/sh", "{{ include "platforma.mainRootWorkDir" . }}/job_script.sh"]
+              # Script is mounted at a distinct path to avoid conflicts with workdir volume
+              command: ["/bin/sh", "/etc/platforma/scripts/job_script.sh"]
               # workingDir = mountPath/workDirFolder/WorkDirName
               workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
               env:
@@ -82,7 +83,7 @@ data:
                 - name: workdirs
                   mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
                 - name: job-script
-                  mountPath: {{ include "platforma.mainRootWorkDir" . }}/job_script.sh
+                  mountPath: /etc/platforma/scripts/job_script.sh
                   subPath: job_script.sh
                   readOnly: true
               <<- if .SecurityContext >>
