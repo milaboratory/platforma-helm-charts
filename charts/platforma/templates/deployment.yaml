@@ -334,6 +334,7 @@ spec:
             # Backend only needs to pass dynamic values like WorkDirName.
             - "--k8s-namespace={{ .Release.Namespace }}"
             - "--k8s-custom-job-template=/etc/platforma/templates/k8s-job-template/job-template.yaml"
+            - "--k8s-verification-script=/etc/platforma/scripts/k8s/verification_script.sh"
             {{- end -}}
             {{- if hasPrefix "dir://" .Values.logging.destination }}
             - "--monitoring-dump-dir={{ trimPrefix "dir://" .Values.logging.destination }}"
@@ -464,6 +465,9 @@ spec:
             - name: k8s-job-template
               mountPath: "/etc/platforma/templates/k8s-job-template"
               readOnly: true
+            - name: k8s-job-script
+              mountPath: "/etc/platforma/scripts/k8s"
+              readOnly: true
             {{- end }}
             {{- include "platforma.volumeMounts" . | nindent 12 }}
             {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
@@ -538,6 +542,10 @@ spec:
         - name: k8s-job-template
           configMap:
             name: {{ printf "%s-k8s-job-template" (include "platforma.fullname" .) }}
+        - name: k8s-job-script
+          configMap:
+            name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+            defaultMode: 0755
         {{- end }}
         {{- include "platforma.volumes" . | nindent 8 }}
         {{- if .Values.mainOptions.licenseFile.secretRef.enabled }}
