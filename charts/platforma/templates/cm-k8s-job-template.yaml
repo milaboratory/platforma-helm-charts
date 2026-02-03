@@ -16,7 +16,7 @@ data:
     #   .JobID                     - Generated from JobNamePrefix + ResourceID
     #   .Image                     - Block's container image
     #   .ContainerName             - Generated container name
-    #   .WorkDirName               - Resource-specific workdir name (e.g., "abc123")
+    #   .WorkDirRelativePath       - Resource-specific workdir path relative to work storage root
     #   .Env                       - Environment variables for the container
     #   .Command                   - Command to run (array), converted to PL_JOB_CMD_AND_ARGS env var
     #   .SecurityContext           - Optional RunAsUser/RunAsGroup from Helm
@@ -58,8 +58,8 @@ data:
               # Command runs job_script.sh which reads PL_JOB_CMD_AND_ARGS env var
               # Script is mounted at a distinct path to avoid conflicts with workdir volume
               command: ["/bin/sh", "/etc/platforma/scripts/job_script.sh"]
-              # workingDir = mountPath/workDirFolder/WorkDirName
-              workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
+              # workingDir = mountPath/workDirFolder/WorkDirRelativePath
+              workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirRelativePath >>
               env:
                 # Command is serialized as shell-quoted arguments to preserve argument boundaries.
                 # job_script.sh executes this via sh -c.
