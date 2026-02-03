@@ -29,7 +29,6 @@ data:
     #   mountPath: {{ include "platforma.instanceMainRootMountPath" . }}
     #   workDirFolder: {{ .Values.persistence.mainRoot.workDirName }}
     #   pvcName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
-    #   namespace: << .Namespace >>
     apiVersion: batch/v1
     kind: Job
     metadata:
@@ -79,7 +78,7 @@ data:
                 <<- end >>
               volumeMounts:
                 - name: workdirs
-                  mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirName >>
+                  mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirRelativePath >>
                 - name: verification-script
                   mountPath: /etc/platforma/scripts/verification_script.sh
                   subPath: verification_script.sh
@@ -118,6 +117,10 @@ data:
             - name: workdirs
               persistentVolumeClaim:
                 claimName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
+            - name: verification-script
+              configMap:
+                name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+                defaultMode: 0755
             - name: job-script
               configMap:
                 name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}

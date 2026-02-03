@@ -312,9 +312,13 @@ persistence:
     # storageClass: "standard"
     mountPath: /data/main-root
     # -- Name of the data directory subfolder within mainRoot. It allows to use a few instances of Platforma with the same PVC.
-    dataPath: "main-root"
+    dataPath: "dev/common"
     # -- Name of the work directory subfolder within the data path (mountPath/dataPath/workDirName)
     workDirName: "work"
+    # -- Name of the packages directory subfolder within the data path (mountPath/dataPath/packagesDirName)
+    packagesDirName: "packages"
+    # -- Enable init container to create required directories (work, packages, common) and chown them.
+    # The init container runs as root to create directories and change ownership to runAsUser.
     # This ensures the application has write permissions when running as non-root.
     initDirsChown: true
   # -- Configuration for the database volume (optional separate setup).
