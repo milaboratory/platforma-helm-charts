@@ -255,26 +255,26 @@ spec:
             {{- end }}
             {{- if .Values.authOptions.ldap.tls.enabled }}
             {{- if .Values.authOptions.ldap.tls.client.secretRef.enabled }}
-            - "--auth-ldap-tls=/etc/platforma/secrets/ldap-client/{{ required "A certKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.certKey)" .Values.authOptions.ldap.tls.client.secretRef.certKey }},/etc/platforma/secrets/ldap-client/{{ required "A keyKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.keyKey)" .Values.authOptions.ldap.tls.client.secretRef.keyKey }}"
+            - "--auth-ldap-client-cert=/etc/platforma/secrets/ldap-client/{{ required "A certKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.certKey)" .Values.authOptions.ldap.tls.client.secretRef.certKey }},/etc/platforma/secrets/ldap-client/{{ required "A keyKey for the LDAP client certificate secret is required (.Values.authOptions.ldap.tls.client.secretRef.keyKey)" .Values.authOptions.ldap.tls.client.secretRef.keyKey }}"
             {{- else if .Values.authOptions.ldap.tls.client.configMapRef.enabled }}
-            - "--auth-ldap-tls=/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.certKey }},/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.keyKey }}"
+            - "--auth-ldap-client-cert=/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.certKey }},/etc/platforma/cm/ldap-client/{{ .Values.authOptions.ldap.tls.client.configMapRef.keyKey }}"
             {{- else if and .Values.authOptions.ldap.tls.client.certPath .Values.authOptions.ldap.tls.client.keyPath }}
-            - "--auth-ldap-tls={{ .Values.authOptions.ldap.tls.client.certPath }},{{ .Values.authOptions.ldap.tls.client.keyPath }}"
+            - "--auth-ldap-client-cert={{ .Values.authOptions.ldap.tls.client.certPath }},{{ .Values.authOptions.ldap.tls.client.keyPath }}"
             {{- end }}
             {{- if .Values.authOptions.ldap.tls.ca.secretRef.enabled }}
-            - "--auth-ldap-cas=/etc/platforma/secrets/ldap-ca/{{ required "A key for the LDAP CA certificate secret is required (.Values.authOptions.ldap.tls.ca.secretRef.key)" .Values.authOptions.ldap.tls.ca.secretRef.key }}"
+            - "--auth-ldap-trusted-cas=/etc/platforma/secrets/ldap-ca/{{ required "A key for the LDAP CA certificate secret is required (.Values.authOptions.ldap.tls.ca.secretRef.key)" .Values.authOptions.ldap.tls.ca.secretRef.key }}"
             {{- else if .Values.authOptions.ldap.tls.ca.configMapRef.enabled }}
-            - "--auth-ldap-cas=/etc/platforma/cm/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.configMapRef.key }}"
+            - "--auth-ldap-trusted-cas=/etc/platforma/cm/ldap-ca/{{ .Values.authOptions.ldap.tls.ca.configMapRef.key }}"
             {{- else if .Values.authOptions.ldap.tls.ca.path }}
-            - "--auth-ldap-cas={{ .Values.authOptions.ldap.tls.ca.path }}"
+            - "--auth-ldap-trusted-cas={{ .Values.authOptions.ldap.tls.ca.path }}"
             {{- end }}
             {{- end }}
             {{- if .Values.authOptions.ldap.rootCas.secretRef.enabled }}
-            - "--auth-ldap-root-cas=/etc/platforma/secrets/ldap-root-cas/{{ required "A key for the LDAP root CA certificates secret is required (.Values.authOptions.ldap.rootCas.secretRef.key)" .Values.authOptions.ldap.rootCas.secretRef.key }}"
+            - "--auth-ldap-trusted-cas=/etc/platforma/secrets/ldap-root-cas/{{ required "A key for the LDAP root CA certificates secret is required (.Values.authOptions.ldap.rootCas.secretRef.key)" .Values.authOptions.ldap.rootCas.secretRef.key }}"
             {{- else if .Values.authOptions.ldap.rootCas.configMapRef.enabled }}
-            - "--auth-ldap-root-cas=/etc/platforma/cm/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.configMapRef.key }}"
+            - "--auth-ldap-trusted-cas=/etc/platforma/cm/ldap-root-cas/{{ .Values.authOptions.ldap.rootCas.configMapRef.key }}"
             {{- else if .Values.authOptions.ldap.rootCas.path }}
-            - "--auth-ldap-root-cas={{ .Values.authOptions.ldap.rootCas.path }}"
+            - "--auth-ldap-trusted-cas={{ .Values.authOptions.ldap.rootCas.path }}"
             {{- end }}
             {{- end }}
             {{- end }}
