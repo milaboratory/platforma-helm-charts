@@ -2,7 +2,7 @@ apiVersion: v2
 name: platforma
 description: A Helm chart for Platforma application
 type: application
-version: 2.2.2
+version: 2.2.3
 appVersion: "1.44.1"
 kubeVersion: ">=1.25.0-0"
 icon: "https://raw.githubusercontent.com/milaboratory/platforma-helm-charts/main/charts/platforma/logo.svg"

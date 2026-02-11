@@ -1,5 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+## [v2.2.3] - 2026-02-11
+### MILAB-5304
+
+- Larger liveness/readiness timeouts for CPU throttling case ([`52a2541`](https://github.com/milaboratory/platforma-helm-charts/commit/52a2541d14ff5d378d28942618203581b7ffcbb1))
+### Miscellaneous Tasks
+
+- Fix LDAP TLS flag names to match backend CLI ([`3d9d589`](https://github.com/milaboratory/platforma-helm-charts/commit/3d9d5891a4516bd8a08a3c333ae4fc9dc4e1eb9c))
+
 ## [v2.2.2] - 2026-01-15
 ### Features
 
