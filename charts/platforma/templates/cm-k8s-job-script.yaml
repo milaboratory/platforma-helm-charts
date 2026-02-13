@@ -1,0 +1,165 @@
+{{- if .Values.k8s.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+data:
+  verification_script.sh: |
+    #!/bin/bash
+
+    # This script is used to verify that the k8s driver is configured correctly.
+    # It is run as a job in Kubernetes and checks that the files created on server side are readable on job side.
+    # It also creates files on job side so server then can check it has access to them.
+
+    set -o nounset
+    set -o errexit
+
+    function check_file() {
+        local file="${1}"
+        local expected_content="${2}"
+        
+        if ! [ -e "${file}" ]; then
+            echo "File '${file}' created on server side is not available on job side"
+            return 1
+        fi
+        if ! [ -r "${file}" ]; then
+            echo "File '${file}' created on server side is not readable on job side"
+            return 1
+        fi
+        if ! grep "${expected_content}" "${file}" >/dev/null; then
+            echo "File '${file}' created on server side has wrong content on job side"
+            echo "Expected content: '${expected_content}'"
+            echo "Actual content: $(cat "${file}")"
+            return 1
+        fi
+
+        return 0
+    }
+
+    echo "${PL_BATCH_CHECK_STRING} (storage)" > "${PL_BATCH_JOB_SIDE_STORAGE_FILE}"
+    echo "${PL_BATCH_CHECK_STRING} (packages)" > "${PL_BATCH_JOB_SIDE_PACKAGES_FILE}"
+
+    check_file "${PL_BATCH_SERVER_SIDE_STORAGE_FILE}" "${PL_BATCH_CHECK_STRING} (storage)"
+    check_file "${PL_BATCH_SERVER_SIDE_PACKAGES_FILE}" "${PL_BATCH_CHECK_STRING} (packages)"
+
+  job_script.sh: |
+    #!/bin/sh
+
+    # ------------------------------------------------------
+    #   Environment variables that control script behavior 
+    # ------------------------------------------------------
+
+    #
+    # Execution
+    #
+    # PL_JOB_CMD_AND_ARGS           - Command to run (quoted), i.e. '"grep" "qwerty" "file.txt"'
+    # PL_JOB_WORKDIR                - Working directory to run in
+    # PL_JOB_STDOUT_PATH            - Path for stdout redirection
+    # PL_JOB_STDERR_PATH            - Path for stderr redirection
+    # PL_JOB_TEE_OUTPUT             - Enable tee output ('true'/'false'). When enabled, output goes to both
+    #                                 files and stdout/stderr (useful for kubectl logs in K8s)
+
+    #
+    # Docker-related options
+    #
+    # PL_JOB_DOCKER_RUN             - PL_JOB_CMD_AND_ARGS contains docker run command ('true'/'false')
+    # PL_JOB_IMAGE_TAG              - Pre-pull docker image before starting the command (to not affect redirected script output)
+    # PL_JOB_DOCKER_LOGIN_REGISTRY  - Authenticate in this docker registry before pulling an image
+    # PL_JOB_DOCKER_LOGIN_USE_SA    - Use ServiceAccount token for docker login ('true'/'false')
+    # PL_JOB_DOCKER_LOGIN_USER      - Username for docker login (when _USE_SA is false)
+    # PL_JOB_DOCKER_LOGIN_PASSWORD  - Password for docker login (when _USE_SA is false)
+
+    #
+    # Debugging
+    #
+    # PL_JOB_DEBUG_SCRIPT           - Enable debug mode (set -o xtrace, show user info)
+    # PL_JOB_STORAGE_MOUNT_PATH     - Path to the shared storage mount point
+
+    #
+    # User (run as)
+    #
+    # PL_JOB_USER_UID               - Run command as user with UID.
+    # PL_JOB_USER_GID               - Run command as user with GID.
+    # PL_JOB_USER_GROUPS            - Additional groups to add to non-root user. Comma-separated list.
+    : "${PL_JOB_USER_NAME:=pl-job}"
+
+    # ------------------------
+    #   Function definitions
+    # ------------------------
+    debug_enabled() {
+        [ "${PL_JOB_DEBUG_SCRIPT:-}" = "true" ]
+    }
+
+    create_file() {
+        _file_path="${1}"
+
+        : > "${_file_path}"
+    }
+
+    tee_output_enabled() {
+        [ "${PL_JOB_TEE_OUTPUT:-}" = "true" ]
+    }
+
+    redirect_outputs() {
+        # Setup output files with correct ownership
+        # Uses FIFOs for tee mode (POSIX-compatible alternative to process substitution)
+
+        if [ -n "${PL_JOB_STDOUT_PATH:-}" ]; then
+            create_file "${PL_JOB_STDOUT_PATH}"
+            if tee_output_enabled; then
+                _stdout_fifo="${TMPDIR:-/tmp}/pl_stdout_fifo_$$"
+                mkfifo "${_stdout_fifo}"
+                tee -a "${PL_JOB_STDOUT_PATH}" < "${_stdout_fifo}" &
+                exec 1>"${_stdout_fifo}"
+                rm -f "${_stdout_fifo}"
+            else
+                exec 1>>"${PL_JOB_STDOUT_PATH}"
+            fi
+        fi
+
+        if [ -z "${PL_JOB_STDERR_PATH:-}" ]; then
+            return
+        fi
+
+        if [ "${PL_JOB_STDOUT_PATH:-}" = "${PL_JOB_STDERR_PATH:-}" ]; then
+            exec 2>&1
+            return
+        fi
+
+        create_file "${PL_JOB_STDERR_PATH}"
+        if tee_output_enabled; then
+            _stderr_fifo="${TMPDIR:-/tmp}/pl_stderr_fifo_$$"
+            mkfifo "${_stderr_fifo}"
+            tee -a "${PL_JOB_STDERR_PATH}" < "${_stderr_fifo}" >&2 &
+            exec 2>"${_stderr_fifo}"
+            rm -f "${_stderr_fifo}"
+        else
+            exec 2>>"${PL_JOB_STDERR_PATH}"
+        fi
+    }
+
+    # ----------------------
+    #   Actual script body
+    # ----------------------
+
+    # Debug mode
+    if debug_enabled; then
+        set -x
+    fi
+
+    # Error handling
+    set -o errexit
+    set -o nounset
+
+    if [ -n "${PL_JOB_PATH:-}" ]; then
+        export PATH="${PL_JOB_PATH}:${PATH}"
+    fi
+
+    redirect_outputs
+
+    cd "${PL_JOB_WORKDIR}"
+
+    sh -c "${PL_JOB_CMD_AND_ARGS}"
+{{- end }}

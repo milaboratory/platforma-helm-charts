@@ -1,0 +1,128 @@
+{{- if .Values.k8s.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-k8s-job-template" (include "platforma.fullname" .) }}
+  labels:
+    {{- include "platforma.labels" . | nindent 4 }}
+data:
+  # Two-phase template:
+  # - Phase 1 (Helm): {{ .Values.xxx }} variables are substituted during helm install/upgrade
+  # - Phase 2 (Backend): << .Variable >> variables are substituted at job creation time
+  job-template.yaml: |-
+    # Kubernetes Job Template for Platforma
+    #
+    # Template variables and their sources:
+    #   .JobID                     - Generated from JobNamePrefix + ResourceID
+    #   .Image                     - Block's container image
+    #   .ContainerName             - Generated container name
+    #   .WorkDirRelativePath       - Resource-specific workdir path relative to work storage root
+    #   .Env                       - Environment variables for the container
+    #   .Command                   - Command to run (array), converted to PL_JOB_CMD_AND_ARGS env var
+    #   .SecurityContext           - Optional RunAsUser/RunAsGroup from Helm
+    #   .Resources                 - Optional container resource requests (requests = limits)
+    #   .Resources.CPU             - CPU cores (int, e.g., 1, 2, 4)
+    #   .Resources.Memory          - Memory (mijson.SizeUnit, e.g., 1*units.GiB)
+    #   .PlatformaQueue            - Platforma queue for Kueue queue selection ("ui-tasks" or "batch-tasks")
+    #
+    # Helm-substituted values (baked in at deploy time):
+    #   mountPath: {{ include "platforma.instanceMainRootMountPath" . }}
+    #   workDirFolder: {{ .Values.persistence.mainRoot.workDirName }}
+    #   pvcName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: << .JobID >>
+      namespace: {{ .Release.Namespace }}
+      {{- if .Values.k8s.kueue.enabled }}
+      labels:
+        <<- if eq .PlatformaQueue "ui-tasks" >>
+        kueue.x-k8s.io/queue-name: "{{ .Values.k8s.kueue.queues.uiTasks }}"
+        kueue.x-k8s.io/priority-class: "{{ .Values.k8s.kueue.queues.uiTasks }}"
+        <<- else >>
+        kueue.x-k8s.io/queue-name: "{{ .Values.k8s.kueue.queues.batchTasks }}"
+        kueue.x-k8s.io/priority-class: "{{ .Values.k8s.kueue.queues.batchTasks }}"
+        <<- end >>
+      {{- end }}
+    spec:
+      # Kueue requires jobs to be created suspended so it can manage their admission.
+      suspend: true
+      # No retries - Platforma handles retry logic
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: << .ContainerName >>
+              image: << .Image >>
+              # Command runs job_script.sh which reads PL_JOB_CMD_AND_ARGS env var
+              # Script is mounted at a distinct path to avoid conflicts with workdir volume
+              command: ["/bin/sh", "/etc/platforma/scripts/job_script.sh"]
+              # workingDir = mountPath/workDirFolder/WorkDirRelativePath
+              workingDir: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirRelativePath >>
+              env:
+                # Command is serialized as shell-quoted arguments to preserve argument boundaries.
+                # job_script.sh executes this via sh -c.
+                - name: PL_JOB_CMD_AND_ARGS
+                  value: << toShellCmd .Command | quote >>
+                <<- range .Env >>
+                - name: << .Name >>
+                  <<- if .SecretName >>
+                  valueFrom:
+                    secretKeyRef:
+                      name: << .SecretName >>
+                      key: << .SecretName >>
+                  <<- else >>
+                  value: << .Value | quote >>
+                  <<- end >>
+                <<- end >>
+              volumeMounts:
+                - name: workdirs
+                  mountPath: {{ include "platforma.mainRootWorkDir" . }}/<< .WorkDirRelativePath >>
+                - name: verification-script
+                  mountPath: /etc/platforma/scripts/verification_script.sh
+                  subPath: verification_script.sh
+                  readOnly: true
+                - name: job-script
+                  mountPath: /etc/platforma/scripts/job_script.sh
+                  subPath: job_script.sh
+                  readOnly: true
+              <<- if .SecurityContext >>
+              securityContext:
+                <<- if .SecurityContext.RunAsUser >>
+                runAsUser: << .SecurityContext.RunAsUser >>
+                <<- end >>
+                <<- if .SecurityContext.RunAsGroup >>
+                runAsGroup: << .SecurityContext.RunAsGroup >>
+                <<- end >>
+              <<- end >>
+              <<- if .Resources >>
+              resources:
+                requests:
+                  <<- if .Resources.CPU >>
+                  cpu: "<< .Resources.CPU >>"
+                  <<- end >>
+                  <<- if .Resources.Memory >>
+                  memory: "<< .Resources.Memory >>"
+                  <<- end >>
+                limits:
+                  <<- if .Resources.CPU >>
+                  cpu: "<< .Resources.CPU >>"
+                  <<- end >>
+                  <<- if .Resources.Memory >>
+                  memory: "<< .Resources.Memory >>"
+                  <<- end >>
+              <<- end >>
+          volumes:
+            - name: workdirs
+              persistentVolumeClaim:
+                claimName: {{- if .Values.persistence.mainRoot.existingClaim }} {{ .Values.persistence.mainRoot.existingClaim }}{{- else }} {{ printf "%s-main-root" (include "platforma.fullname" .) }}{{- end }}
+            - name: verification-script
+              configMap:
+                name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+                defaultMode: 0755
+            - name: job-script
+              configMap:
+                name: {{ printf "%s-k8s-job-script" (include "platforma.fullname" .) }}
+                defaultMode: 0755
+{{- end }}
