@@ -351,19 +351,25 @@ mainOptions:
 
 # -- Local Storage Options (using PVCs)
 persistence:
-  # -- Configuration for the main data volume (simple setup).
-  # If enabled, this creates a single PVC for all application data.
-  # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
+  # -- Configuration for the main root volume.
+  # This PVC is always created and serves as the base directory for workDir and packagesDir.
   mainRoot:
-    enabled: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
     size: 500Gi
     # storageClass: "standard"
     mountPath: /data/main-root
-  # -- Configuration for the database volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
+    # -- Name of the work directory subfolder within mainRoot.
+    workDirName: "work"
+    # -- Name of the packages directory subfolder within mainRoot.
+    packagesDirName: "packages"
+    # -- Enable init container to chown workDir and packagesDir to match securityContext.runAsUser/runAsGroup.
+    # This ensures the application has write permissions when running as non-root.
+    initDirsChown: true
+  # -- Configuration for the database volume (optional separate setup).
+  # If enabled, creates a separate PVC for the database directory.
+  # If disabled, the database will be stored within mainRoot.
   dbDir:
     enabled: false
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
@@ -372,26 +378,6 @@ persistence:
     size: 20Gi
     # storageClass: "standard"
     mountPath: /data/rocksdb
-  # -- Configuration for the working directory volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
-  workDir:
-    enabled: false
-    # -- Use an existing PVC for the working directory. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    accessMode: ReadWriteOnce
-    size: 50Gi
-    # storageClass: "standard"
-    mountPath: /data/platforma-data/work
-  # -- Configuration for the packages volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
-  packagesDir:
-    enabled: false
-    # -- Use an existing PVC for the packages directory. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    accessMode: ReadWriteOnce
-    size: 50Gi
-    # storageClass: "standard"
-    mountPath: /data/platforma-data/packages
 
 # -- Listen Options (--listen-port, --listen-http-port, --listen-address, TLS options)
 listenOptions:
@@ -484,6 +470,7 @@ primaryStorage:
     url: "" # e.g., gs://<bucket>[/<prefix-in-bucket>]
     projectId: "" # GCP project ID
     serviceAccount: "" # GCP service account to use for authentication
+
 
 # -- Data Library Options (--no-data-library, --no-host-data-library, --data-library-fs, --data-library-s3, --data-library-gcs)
 dataLibrary:
@@ -683,25 +670,10 @@ googleBatch:
       name: ""
       # -- The key within the ConfigMap that contains the template file.
       key: ""
-  # -- Volumes for Google Batch. This is used to mount the shared NFS volume.
-  volumes:
-    enabled: false
-    # -- The name of the volume.
-    name: "nfs-volume"
-    # -- The path where the volume will be mounted inside the container.
-    mountPath: "/data/platforma-data"
-    # -- The name of the working directory subdirectory inside the NFS volume.
-    workDirName: "work"
-    # -- The name of the packages directory subdirectory inside the NFS volume.
-    packagesDirName: "packages"
-    # -- Use an existing PVC for the Google Batch volume. If specified, the `storageClass` option is ignored.
-    existingClaim: "filestore-fast-pvc"
-    # -- The storage class to use for dynamic provisioning.
-    storageClass: ""
-    # -- The size of the volume to create. This is only used for dynamic provisioning.
-    size: "1Ti"
-    # -- The access mode for the volume.
-    accessMode: "ReadWriteMany"
+
+# -- Kubernetes Options
+k8s:
+  enabled: false
 
 # -- Logging Options
 # This section configures the application's logging behavior using the --log-dst flag.
