@@ -246,7 +246,7 @@ env:
 # -- Deployment-level configuration
 deployment:
   priorityClassName: "" # Assigns a PriorityClass (e.g., "high-priority") to the Pod.
-  schedulerName: ""     # Use an alternate scheduler, e.g., "stork-scheduler".
+  schedulerName: "" # Use an alternate scheduler, e.g., "stork-scheduler".
   # -- Override the default container entrypoint by specifying a command.
   # By default, this is disabled, and the chart passes arguments directly
   # to the container's predefined ENTRYPOINT.
@@ -282,8 +282,8 @@ deployment:
     readOnlyRootFilesystem: false # Allow writing to the container's root filesystem
     allowPrivilegeEscalation: false # Allow processes to gain more privileges
     capabilities:
-       add: [] # Add all Linux capabilities. Use with extreme caution.
-       drop: ["ALL"] # Drop no capabilities. Consider dropping unnecessary capabilities.
+      add: [] # Add all Linux capabilities. Use with extreme caution.
+      drop: ["ALL"] # Drop no capabilities. Consider dropping unnecessary capabilities.
   # -- Pod-level security context.
   # ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   podSecurityContext:
@@ -351,19 +351,28 @@ mainOptions:
 
 # -- Local Storage Options (using PVCs)
 persistence:
-  # -- Configuration for the main data volume (simple setup).
-  # If enabled, this creates a single PVC for all application data.
-  # The `dbDir`, `workDir`, and `packagesDir` options below will be ignored.
+  # -- Configuration for the main root volume.
+  # This PVC is always created and serves as the base directory for workDir and packagesDir.
   mainRoot:
-    enabled: true
     # -- Use an existing PVC for the main root directory. If specified, `size` and `storageClass` are ignored.
     existingClaim: ""
     accessMode: ReadWriteOnce
     size: 500Gi
     # storageClass: "standard"
     mountPath: /data/main-root
-  # -- Configuration for the database volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
+    # -- Name of the data directory subfolder within mainRoot. It allows to use a few instances of Platforma with the same PVC.
+    dataPath: "dev/common"
+    # -- Name of the work directory subfolder within the data path (mountPath/dataPath/workDirName)
+    workDirName: "work"
+    # -- Name of the packages directory subfolder within the data path (mountPath/dataPath/packagesDirName)
+    packagesDirName: "packages"
+    # -- Enable init container to create required directories (work, packages, common) and chown them.
+    # The init container runs as root to create directories and change ownership to runAsUser.
+    # This ensures the application has write permissions when running as non-root.
+    initDirsChown: true
+  # -- Configuration for the database volume (optional separate setup).
+  # If enabled, creates a separate PVC for the database directory.
+  # If disabled, the database will be stored within mainRoot.
   dbDir:
     enabled: false
     # -- Use an existing PVC for the database directory. If specified, `size` and `storageClass` are ignored.
@@ -372,26 +381,6 @@ persistence:
     size: 20Gi
     # storageClass: "standard"
     mountPath: /data/rocksdb
-  # -- Configuration for the working directory volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
-  workDir:
-    enabled: false
-    # -- Use an existing PVC for the working directory. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    accessMode: ReadWriteOnce
-    size: 50Gi
-    # storageClass: "standard"
-    mountPath: /data/platforma-data/work
-  # -- Configuration for the packages volume (advanced setup).
-  # Only used if `persistence.mainRoot.enabled` is false.
-  packagesDir:
-    enabled: false
-    # -- Use an existing PVC for the packages directory. If specified, `size` and `storageClass` are ignored.
-    existingClaim: ""
-    accessMode: ReadWriteOnce
-    size: 50Gi
-    # storageClass: "standard"
-    mountPath: /data/platforma-data/packages
 
 # -- Listen Options (--listen-port, --listen-http-port, --listen-address, TLS options)
 listenOptions:
@@ -412,7 +401,6 @@ listenOptions:
   selfSignedTlsOrg: ""
   selfSignedTlsDomains: []
   selfSignedTlsIps: []
-
 
 # -- Alternative registry with genome index assets for bio software
 assetsRegistry: ""
@@ -683,25 +671,21 @@ googleBatch:
       name: ""
       # -- The key within the ConfigMap that contains the template file.
       key: ""
-  # -- Volumes for Google Batch. This is used to mount the shared NFS volume.
-  volumes:
-    enabled: false
-    # -- The name of the volume.
-    name: "nfs-volume"
-    # -- The path where the volume will be mounted inside the container.
-    mountPath: "/data/platforma-data"
-    # -- The name of the working directory subdirectory inside the NFS volume.
-    workDirName: "work"
-    # -- The name of the packages directory subdirectory inside the NFS volume.
-    packagesDirName: "packages"
-    # -- Use an existing PVC for the Google Batch volume. If specified, the `storageClass` option is ignored.
-    existingClaim: "filestore-fast-pvc"
-    # -- The storage class to use for dynamic provisioning.
-    storageClass: ""
-    # -- The size of the volume to create. This is only used for dynamic provisioning.
-    size: "1Ti"
-    # -- The access mode for the volume.
-    accessMode: "ReadWriteMany"
+
+# -- Kubernetes Options
+# Configuration for running jobs on Kubernetes via Kueue
+k8s:
+  enabled: false
+  # -- Kueue configuration for job queue management
+  kueue:
+    # -- Enable Kueue labels on jobs. When enabled, jobs will have queue and priority labels.
+    enabled: true
+    # -- Queue names for different priority classes
+    queues:
+      # -- Queue name for UI-triggered tasks (higher priority)
+      uiTasks: "ui-tasks"
+      # -- Queue name for batch/background tasks (lower priority)
+      batchTasks: "batch-tasks"
 
 # -- Logging Options
 # This section configures the application's logging behavior using the --log-dst flag.
